@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Online editor</title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+    <link rel="stylesheet" href="/stylesheets/bootstrap.css" />
+  </head>
+  <body>
+    <a href="/auth/github">Hallo</a>
+    <div class="container">
+        <div class="wrapper" data-ng-app="OnlineEditor">
+            <div data-ng-view=""></div>
+        </div>
+    </div>
+
+    <script src="/javascripts/jquery.js"></script>
+    <script src="/javascripts/bootstrap.js"></script>
+
+    <!-- Angular scripts -->
+    <script src="/javascripts/angular.js"></script>
+    <script src="/javascripts/angular-route.js"></script>
+    <script src="/javascripts/angular-resource.js"></script>
+    <script src="/javascripts/angular-sanitize.js"></script>
+
+    <!-- App scripts -->
+    <script src="/app/app.js"></script>
+    <script src="/app/config/routes.js"></script>
+    <script src="/app/start/controllers/loginCtrl.js"></script>
+
+
+    <!--<script src="/app/"></script>-->
+  </body>
+</html>
