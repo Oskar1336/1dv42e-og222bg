@@ -3,39 +3,18 @@
  * Module dependencies.
  */
 
-var express = require('express'),
-    https = require("https"), // @TODO: Implement https
-    http = require('http'),
-    path = require('path'),
-    mongoose = require("mongoose"),
-    everyauth = require("./config/everyauthConfig"),
-    app = express();
+var express = require('express');
+var https = require("https"); // @TODO: Implement https
+var http = require('http');
+// var mongoose = require("mongoose");
+var app = module.exports = express();
 
-module.exports = {
-    app: app,
-    everyauth: everyauth
-};
+// require("./config/mongodbConfig.js")(app, mongoose); // Database settings.
+// var models = {};
+// models.User = require("./models/user")(mongoose);
+var config = require("./config/config")(app, express);
 
-// all environments
-app.set('port', process.env.PORT || 3000);
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'hjs');
-app.use(express.logger('dev'));
-app.use(express.json());
-app.use(express.urlencoded());
-app.use(express.methodOverride());
-app.use(app.router);
-app.use(express.static(path.join(__dirname, 'public')));
-app.use(express.cookieParser());
-app.use(express.session({ secret: "keyboard cat" }));
-app.use(everyauth.middleware());
-
-// development only
-if ('development' == app.get('env')) {
-  app.use(express.errorHandler());
-}
-
-require('./routes');
+require('./routes')(app);
 
 http.createServer(app).listen(app.get('port'), function(){
   console.log('Express server listening on port ' + app.get('port'));
