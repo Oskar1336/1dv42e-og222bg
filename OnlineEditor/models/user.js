@@ -2,10 +2,12 @@
 
 module.exports = function(mongoose) {
     var Schema = mongoose.Schema;
-    var ObjectId = Schema.ObjectId;
-
     return mongoose.model("User", new Schema({
         username: String,
-        accessToken: String
+        githubId: Number,
+        accessToken: String,
+        displayName: String,
+        emails: [ String ],
+        projects: [ { type: Schema.ObjectId, ref: "Project" } ]
     }));
 };

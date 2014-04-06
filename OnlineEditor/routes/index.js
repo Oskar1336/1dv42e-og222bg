@@ -6,9 +6,7 @@ module.exports = function(app) {
     });
 
     app.get("/test", function(req, res) {
-        // models.User.find({}, function(err, docs) {
-        //     res.send(docs);
-        // });
+        res.send(req.user);
     });
 };
 

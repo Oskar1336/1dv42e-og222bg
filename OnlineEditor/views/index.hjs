@@ -6,7 +6,6 @@
     <link rel="stylesheet" href="/stylesheets/bootstrap.css" />
   </head>
   <body>
-    <a href="/auth/github">Hallo</a>
     <div class="container">
         <div class="wrapper" data-ng-app="OnlineEditor">
             <div data-ng-view=""></div>

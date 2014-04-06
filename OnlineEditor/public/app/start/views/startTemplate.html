@@ -15,7 +15,8 @@
                 <li><a href="#/">Link</a></li>
             </ul>
             <ul class="nav navbar-nav navbar-right" data-ng-controller="LoginCtrl">
-                <li class=""><a href="javascript:;" data-ng-click="loginWithGitHub()">Login with GitHub</a></li>
+                <li><a href="/auth/github" data-ng-hide="loggedin">Login with GitHub</a></li>
+                <li><a href="javascript:;" data-ng-click="loginWithGitHub()"</li>
             </ul>
         </div>
     </div>
