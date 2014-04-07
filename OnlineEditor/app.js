@@ -12,6 +12,7 @@ var models = {};
 models.Users = require("./models/user")(mongoose); // require mongoose User model
 models.Projects = require("./models/project")(mongoose); // require mongoose Project model
 models.Files = require("./models/file")(mongoose); // require mongoose File model
+models.Foders = require("./models/folder")(mongoose); // require mongoose Folder model
 
 // Passport config.
 var passport = require("./config/passportConfig")(models);

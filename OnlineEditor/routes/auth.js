@@ -15,4 +15,16 @@ module.exports = function(app, models, passport) {
         console.log("logged out");
         res.redirect("/");
     });
+
+    app.get("/emptyusertable", function(req, res) {
+        // Code for emptying user table
+        models.Users.find({}, function(err, docs) {
+            res.send(docs);
+            for (var i = 0; i < docs.length; i++) {
+                docs[i].remove(function(err, user) {
+                    console.log("removed");
+                });
+            }
+        });
+    });
 };
