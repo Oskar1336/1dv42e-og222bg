@@ -1,5 +1,5 @@
 /*
-    Config file
+ * Config file
  */
 
 angular.module("OnlineEditor").config(["$routeProvider",
@@ -7,7 +7,14 @@ angular.module("OnlineEditor").config(["$routeProvider",
         "use strict";
 
         $routeProvider.when("/", {
-            templateUrl: "/app/start/views/startTemplate.html"
+            templateUrl: "/app/Start/Views/StartTemplate.html",
+            controller: "InitStartCtrl"
+        }).when("/projects", {
+            templateUrl: "/app/Projects/Views/ProjectsTemplate.html",
+            controller: "InitStartCtrl"
+        }).when("/editor/:id", {
+            templateUrl: "/app/Editor/Views/CodeEditTemplate.html",
+            controller: "InitEditorCtrl"
         }).otherwise({
             redirectTo: "/"
         });

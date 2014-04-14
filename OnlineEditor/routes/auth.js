@@ -18,7 +18,7 @@ module.exports = function(app, models, passport) {
 
     app.get("/emptyusertable", function(req, res) {
         // Code for emptying user table
-        models.Users.find({}, function(err, docs) {
+        models.User.find({}, function(err, docs) {
             res.send(docs);
             for (var i = 0; i < docs.length; i++) {
                 docs[i].remove(function(err, user) {

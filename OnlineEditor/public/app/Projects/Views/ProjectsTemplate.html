@@ -1,0 +1,29 @@
+<div class="container">
+    <div class="wrapper">
+        <span data-online-editor-menu=""></span>
+
+        <div data-ng-controller="ProjectCtrl">
+            <h1>Your projects</h1>
+            <div class="row">
+                <div class="col-xs-6 col-md-3" data-ng-repeat="project in projects">
+                    <div class="thumbnail project-color">
+                        <div class="caption">
+                            <h4>{{project.projectName}}</h4>
+                            <p>Owner: {{project.owner.name}}<br>
+                            Username: {{project.owner.username}}</p>
+                        </div>
+                        <a href="javascript:void(0)" class="btn btn-danger" data-ng-click="deleteProject(project)">Delete</a>
+                        <a href="javascript:void(0)" class="btn btn-info" data-ng-click="openCreateEditProjectModal(project)">Update</a>
+                        <a href="#/editor/{{project._id}}" class="btn btn-primary" data-ng-click="loadProject(project)">Open</a>
+                    </div>
+                </div>
+                <div class="col-xs-6 col-md-2 center-text create-project">
+                    <a href="javascript:void(0);" data-ng-click="openCreateEditProjectModal(null)">
+                        <span class="glyphicon glyphicon-plus"></span>
+                        <p>Create new project</p>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

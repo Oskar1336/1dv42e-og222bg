@@ -1,8 +1,101 @@
+html, body {
+    height:100%;
+    width: 100%;
+}
+
 body {
-  padding: 50px;
-  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+    font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
 }
 
 a {
-  color: #00B7FF;
+    color: #00B7FF;
+}
+
+.full-window {
+    height: 100%;
+}
+
+.project-color {
+    background-color: #f8f8f8;
+}
+
+.center-text {
+    text-align: center;
+}
+
+.create-project .glyphicon-plus {
+    margin-top: 30px;
+    font-size: 5.2em;
+}
+
+.create-project a {
+    color: black;
+}
+
+.create-project a:hover {
+    color: #00B7FF;
+    cursor: pointer;
+}
+
+.editor-container {
+    width: 100%;
+    background-color: #333333;
+}
+
+.edit-wrapper {
+    height: 96%;
+}
+
+.top-menu {
+    width: 100%;
+    height: 4%;
+    background-color: #f8f8f8;
+    padding: 5px;
+    margin-top: 0;
+    position: relative;
+    top: 0;
+    left: 0;
+}
+
+.left-side-bar {
+    width: 300px;
+    height: 100%;
+    position: relative;
+    left: 0;
+    background-color: #CACACA;
+    float: left;
+}
+
+.editor-menu-item {
+    margin-left: 20px;
+    float:left;
+}
+
+.code-wrapper {
+    width: 77%;
+    height: 100%;
+    float:left;
+    color: white;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace;
+}
+
+.code-content {
+    padding: 10px;
+    margin-left: 15px;
+    float:left;
+    height: 100%;
+    width:95%;
+    color: #FFF;
+}
+
+.row-count {
+    margin-top: 10px;
+    margin-left:5px;
+    float:left;
+    width:23px;
+    text-align: center;
+}
+
+.pointer:hover{
+    cursor: pointer;
 }

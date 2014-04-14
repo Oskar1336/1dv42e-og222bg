@@ -2,31 +2,45 @@
 <html>
   <head>
     <title>Online editor</title>
-    <link rel='stylesheet' href='/stylesheets/style.css' />
+    <link href='http://fonts.googleapis.com/css?family=Spinnaker' rel='stylesheet' type='text/css'>
     <link rel="stylesheet" href="/stylesheets/bootstrap.css" />
+    <link rel='stylesheet' href='/stylesheets/style.css' />
   </head>
   <body>
-    <div class="container">
-        <div class="wrapper" data-ng-app="OnlineEditor">
-            <div data-ng-view=""></div>
-        </div>
+    <div data-ng-app="OnlineEditor" class="full-window">
+        <div id="53479ae199" class="hidden">{{user._id}}</div>
+        <div data-ng-view="" class="full-window"></div>
     </div>
 
     <script src="/javascripts/jquery.js"></script>
     <script src="/javascripts/bootstrap.js"></script>
-
     <!-- Angular scripts -->
     <script src="/javascripts/angular.js"></script>
     <script src="/javascripts/angular-route.js"></script>
     <script src="/javascripts/angular-resource.js"></script>
     <script src="/javascripts/angular-sanitize.js"></script>
-
+    <script src="/javascripts/angular-cookies.js"></script>
+    <script src="/javascripts/ui-bootstrap.js"></script>
     <!-- App scripts -->
-    <script src="/app/app.js"></script>
-    <script src="/app/config/routes.js"></script>
-    <script src="/app/start/controllers/loginCtrl.js"></script>
+    <script src="/app/App.js"></script>
+    <script src="/app/Config/Routes.js"></script>
+    <script src="/app/Config/InitEditorCtrl.js"></script>
+    <script src="/app/Config/InitStartCtrl.js"></script>
+    <!-- Menu scripts -->
+    <script src="/app/Menu/Module.js"></script>
+    <script src="/app/Menu/Controllers/LoginCtrl.js"></script>
+    <script src="/app/Menu/Directives/MenuDirective.js"></script>
+    <!-- Project scripts -->
+    <script src="/app/Projects/Module.js"></script>
+    <script src="/app/Projects/Services/ProjectFactory.js"></script>
+    <script src="/app/Projects/Controllers/ProjectCtrl.js"></script>
+    <!-- Alert scripts -->
+    <script src="/app/Alert/Module.js"></script>
+    <script src="/app/Alert/Services/AlertFactory.js"></script>
+    <!-- Editor scripts -->
+    <script src="/app/Editor/Module.js"></script>
+    <script src="/app/Editor/Controllers/EditorCtrl.js"></script>
+    <script src="/app/Editor/Services/FolderFactory.js"></script>
 
-
-    <!--<script src="/app/"></script>-->
   </body>
 </html>

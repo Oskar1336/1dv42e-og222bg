@@ -5,14 +5,15 @@ var https = require("https"); // @TODO: Implement https
 var http = require('http');
 var path = require("path");
 var mongoose = require("mongoose");
+var StringValidation = require("string");
 
 // Database configuration and mongoDB models.
 require("./config/mongodbConfig.js")(mongoose); // Database settings.
 var models = {};
-models.Users = require("./models/user")(mongoose); // require mongoose User model
-models.Projects = require("./models/project")(mongoose); // require mongoose Project model
-models.Files = require("./models/file")(mongoose); // require mongoose File model
-models.Foders = require("./models/folder")(mongoose); // require mongoose Folder model
+models.User = require("./models/user")(mongoose); // require mongoose User model
+models.Project = require("./models/project")(mongoose); // require mongoose Project model
+models.File = require("./models/file")(mongoose); // require mongoose File model
+models.Folder = require("./models/folder")(mongoose); // require mongoose Folder model
 
 // Passport config.
 var passport = require("./config/passportConfig")(models);
@@ -25,6 +26,13 @@ require("./config/config")(app, express, passport);
 require("./routes/auth")(app, models, passport);
 // Index routes
 require('./routes')(app);
+// Project routes.
+require("./routes/project")(app, models, StringValidation);
+
+require("./routes/folder")(app, models);
+
+
+require("./routes/empty")(app, models);
 
 app.listen(app.get('port'));
 console.log('Express server listening on port ' + app.get('port'));

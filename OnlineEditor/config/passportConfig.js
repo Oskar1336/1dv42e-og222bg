@@ -9,9 +9,9 @@ module.exports = function(models) {
     var oauthCreds = require("../models/oauthCreds");
 
     var findOrCreateUser = function(profile, accesstoken, callback) {
-        models.Users.find({ username: profile.username }, function(err, result) {
+        models.User.find({ username: profile.username }, function(err, result) {
             if (result.length <= 0) {
-                models.Users.create({
+                models.User.create({
                     username: profile.username,
                     githubId: profile.id,
                     accessToken: accesstoken,
@@ -25,6 +25,7 @@ module.exports = function(models) {
                     }
                 });
             } else {
+                // @TODO: update access token in database.
                 callback(err, err ? null : result[0]);
             }
         });

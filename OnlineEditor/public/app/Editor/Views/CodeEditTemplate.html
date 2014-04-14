@@ -1,0 +1,40 @@
+<div class="editor-container full-window" data-ng-controller="EditorCtrl">
+    <div class="edit-wrapper">
+        <div class="top-menu">
+            <div class="dropdown editor-menu-item">
+                <a id="fileDDL" data-toggle="dropdown" href="javascript:void(0);">File</a>
+                <ul class="dropdown-menu" role="menu" aria-labelledby="fileDDL">
+                    <li role="presentation"><a role="menuitem" tabindex="-1" href="javascript:void(0);" data-ng-click="createFile()">New file</a></li>
+                    <li role="presentation"><a role="menuitem" tabindex="-1" href="javascript:void(0);" data-ng-click="createFolder()">New folder</a></li>
+                    <li role="presentation"><a role="menuitem" tabindex="-1" href="javascript:void(0);" data-ng-click="saveAll()">Save all</a></li>
+                </ul>
+            </div>
+            <a href="javascript:void(0);" class="editor-menu-item" data-ng-click="options()">Options</a>
+        </div>
+
+        <div class="left-side-bar">
+            Här ska det vara en meny
+
+            <ul class="list-group">
+                <li class="list-group-item pointer" data-ng-repeat="folder in project.folders" id="{{folder._id}}" data-ng-click="expandFolder(folder)">{{folder.folderName}}</li>
+                <li class="list-group-item pointer" data-ng-click="initAddFolder(null)"><span class="glyphicon glyphicon-plus"></span> Add folder</li>
+            </ul>
+        </div>
+
+        <div class="code-wrapper">
+            <div class="row-count">1<br>2<br>3<br>4<br>5<br>6<br>7<br>8<br>9<br>10</div>
+            <div class="code-content">
+                &lt;html&gt;<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&lt;head&gt;<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&lt;/head&gt;<br>
+                <br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&lt;body&gt;<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;div&gt;<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;hej<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;/div&gt;<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&lt;/body&gt;<br>
+                &lt;/html&gt;
+            </div>
+        </div>
+    </div>
+</div>
