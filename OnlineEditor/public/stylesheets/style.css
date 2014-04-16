@@ -48,13 +48,14 @@ a {
 
 .top-menu {
     width: 100%;
-    height: 4%;
+    height: 30px;
     background-color: #f8f8f8;
     padding: 5px;
     margin-top: 0;
     position: relative;
     top: 0;
     left: 0;
+    float:left;
 }
 
 .left-side-bar {
@@ -64,6 +65,7 @@ a {
     left: 0;
     background-color: #CACACA;
     float: left;
+    overflow: scroll;
 }
 
 .editor-menu-item {
@@ -83,8 +85,6 @@ a {
     padding: 10px;
     margin-left: 15px;
     float:left;
-    height: 100%;
-    width:95%;
     color: #FFF;
 }
 
@@ -98,4 +98,8 @@ a {
 
 .pointer:hover{
     cursor: pointer;
+}
+
+.margin-top {
+    margin-top: 10px;
 }

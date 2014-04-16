@@ -13,7 +13,7 @@ angular.module("OnlineEditor").config(["$routeProvider",
             templateUrl: "/app/Projects/Views/ProjectsTemplate.html",
             controller: "InitStartCtrl"
         }).when("/editor/:id", {
-            templateUrl: "/app/Editor/Views/CodeEditTemplate.html",
+            templateUrl: "/app/Editor/Views/EditorTemplate.html",
             controller: "InitEditorCtrl"
         }).otherwise({
             redirectTo: "/"

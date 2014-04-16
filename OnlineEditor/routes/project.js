@@ -2,11 +2,13 @@
 
 module.exports = function(app, models, StringValidation) {
     var helpers = require("../models/helperFunctions");
+    var events = require("events");
+    var emitter = new events.EventEmitter();
 
 
     // Route for getting all projects avaiable for current logged user.
     app.get("/projects", helpers.checkIfAuthenticated, function(req, res) {
-        models.Project.find({users: req.user._id}).populate("owner users folders").exec(function(err, projects) {
+        models.Project.find({users: req.user._id}).populate("owner users rootFolder").exec(function(err, projects) {
             if (err) {
                 res.status(500);
                 res.send({error: err, statusCode: 500});
@@ -19,7 +21,7 @@ module.exports = function(app, models, StringValidation) {
     
     // Route for getting a specific project.
     app.get("/projects/:id", helpers.checkIfAuthenticated, function(req, res) {
-        models.Project.findById(req.params.id).populate("users folders owner").exec(function(err, project) {
+        models.Project.findById(req.params.id).populate("users rootFolder owner").exec(function(err, project) {
             if (err) {
                 res.status(500);
                 res.send({error: err, statusCode: 500});
@@ -36,52 +38,83 @@ module.exports = function(app, models, StringValidation) {
         });
     });
 
+    // Event that sends project to client side.
+    emitter.on("sendProject", function(rootFolder, newProject, res) {
+        rootFolder.project = newProject._id;
+        rootFolder.parent = rootFolder._id;
+        rootFolder.save(function(rootFolderErr) {
+            if (rootFolderErr) {
+                res.status(500);
+                res.send({error: rootFolderErr, statusCode: 500});
+            } else {
+                models.Project.populate(newProject, {path: "owner users rootFolder"}, function(err, project) {
+                    if (err) {
+                        res.status(500);
+                        res.send({error: err, statusCode: 500});
+                    } else {
+                        res.status(201);
+                        res.send({content: project, statusCode: 201});
+                    }
+                });
+            }
+        });
+    });
+
+    // Event for adding a project to a user.
+    emitter.on("addProjectToUser", function(rootFolder, newProject, userId, res) {
+        models.User.findById(userId, function(err, user) {
+            if (err) {
+                res.status(500);
+                res.send({error: err, statusCode: 500});
+            } else {
+                user.projects.push(newProject._id);
+                user.save(function(err) {
+                    if (err) {
+                        res.status(500);
+                        res.send({error: err, statusCode: 500});
+                    } else {
+                        emitter.emit("sendProject", rootFolder, newProject, res);
+                    }
+                });
+            }
+        });
+        
+    });
+
+    // Event for creating new project.
+    emitter.on("createProject", function(rootFolder, newProjectInfo, user, res) {
+        var newProject = new models.Project({
+            projectName: newProjectInfo.projectName,
+            owner: user._id,
+            users: [ user._id ],
+            rootFolder: rootFolder._id
+        });
+        newProject.save(function(err) {
+            if (err) {
+                res.status(500);
+                res.send({error: err, statusCode: 500});
+            } else {
+                emitter.emit("addProjectToUser", rootFolder, newProject, user._id, res);
+            }
+        });
+    });
+
     // Route for creating new project.
     app.post("/projects", helpers.checkIfAuthenticated, function(req, res) {
         if (validateProjectInfo(req.body)) {
             // Create root folder.
-            var rootfolder = new models.Folder({
+            var rootFolder = new models.Folder({
                 folderName: req.body.projectName,
-                files: []
+                files: [],
+                folders: []
             });
-            rootfolder.save(function(err) {
-                // Create new project with rootfolder and owner.
-                var newProject = new models.Project({
-                    projectName: req.body.projectName,
-                    owner: req.user._id,
-                    users: [ req.user._id ],
-                    folders: [ rootfolder._id ]
-                });
-                newProject.save(function(projecterr) {
-                    models.User.findById(req.user._id, function(err, user) {
-                        if (err) {
-                            res.status(500);
-                            res.send({error: err, statusCode: 500});
-                        } else {
-                            user.projects.push(newProject._id);
-                            user.save();
-                        }
-                    });
-                    // Adds reference to this project to root folder.
-                    rootfolder.project = newProject._id;
-                    rootfolder.parent = rootfolder._id;
-                    rootfolder.save(function(rootfolderErr) {
-                        if (rootfolderErr) {
-                            res.status(500);
-                            res.send({error: rootfolderErr, statusCode: 500});
-                        } else {
-                            models.Project.populate(newProject, {path: "owner users folders"}, function(err, project) {
-                                if (err) {
-                                    res.status(500);
-                                    res.send({error: err, statusCode: 500});
-                                } else {
-                                    res.status(201);
-                                    res.send({content: project, statusCode: 201});
-                                }
-                            });
-                        }
-                    });
-                });
+            rootFolder.save(function(err) {
+                if (err) {
+                    res.status(500);
+                    res.send({error: err, statusCode: 500});
+                } else {
+                    emitter.emit("createProject", rootFolder, req.body, req.user, res);
+                }
             });
         } else {
             res.status(400);
@@ -89,6 +122,7 @@ module.exports = function(app, models, StringValidation) {
         }
     });
 
+    // @TODO: Refactor to avoid callback hell.
     // Route for updating project.
     app.put("/projects/:id", helpers.checkIfAuthenticated, function(req, res) {
         models.Project.findById(req.params.id, function(err, project) {

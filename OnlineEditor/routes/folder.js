@@ -5,8 +5,9 @@ module.exports = function(app, models) {
     var events = require("events");
     var emitter = new events.EventEmitter();
 
+    // @TODO: stop populating project.
     app.get("/folders/:projectId", helpers.checkIfAuthenticated, function(req, res) {
-        models.Folder.find({project: req.params.projectId}).populate("files project").exec(function(err, folders) {
+        models.Folder.find({project: req.params.projectId}).populate("files project folders").exec(function(err, folders) {
             if (err) {
                 res.status(500);
                 res.send({error: err, statusCode: 500});
@@ -22,8 +23,10 @@ module.exports = function(app, models) {
         });
     });
 
+    // http://jsfiddle.net/brendanowen/uXbn6/8/
+    // http://stackoverflow.com/questions/11854514/is-it-possible-to-make-a-tree-view-with-angular
     app.get("/folder/:id", helpers.checkIfAuthenticated, function(req, res) {
-        models.Folder.findById(req.params.id).populate("files project").exec(function(err, folder) {
+        models.Folder.findById(req.params.id).populate("files project folders").exec(function(err, folder) {
             if (err) {
                 res.status(500);
                 res.send({error: err, statusCode: 500});
@@ -39,39 +42,46 @@ module.exports = function(app, models) {
         });
     });
 
-    emitter.on("newFolderSaved", function(newFolder, project, res) {
-        project.folders.push(newFolder._id);
-        project.save(function(err) {
+    emitter.on("sendFolder", function(folder, res) {
+        models.Folder.populate(folder, {path: "files project folders"}, function(err, resFolder) {
             if (err) {
                 res.status(500);
                 res.send({error: err, statusCode: 500});
             } else {
                 res.status(201);
-                res.send({content: newFolder, statusCode: 201});
+                res.send(resFolder);
             }
         });
     });
 
-    emitter.on("projectFound", function(project, newFolder, res) {
+    emitter.on("saveNewFolderToParent", function(newFolder, project, res) {
+        models.Folder.findById(newFolder.parent, function(err, folder) {
+            folder.folders.push(newFolder._id);
+            folder.save(function(err) {
+                if (err) {
+                    res.status(500);
+                    res.send({error: err, statusCode: 500});
+                } else {
+                    emitter.emit("sendFolder", newFolder, res);
+                }
+            });
+        });
+    });
+
+    emitter.on("createFolder", function(project, newFolder, res) {
         var folder = new models.Folder({
             folderName: newFolder.folderName,
             files: [],
-            project: project._id
+            project: project._id,
+            parent: newFolder.parent,
+            folders: []
         });
         folder.save(function(err) {
             if (err) {
                 res.status(500);
                 res.send({error: err, statusCode: 500});
             } else {
-                folder.parent = folder._id;
-                folder.save(function(folderupdateerr) {
-                    if (folderupdateerr) {
-                        res.status(500);
-                        res.send({error: folderupdateerr, statusCode: 500});
-                    } else {
-                        emitter.emit("newFolderSaved", folder, project, res);
-                    }
-                });
+                emitter.emit("saveNewFolderToParent", folder, project, res);
             }
         });
     });
@@ -79,7 +89,7 @@ module.exports = function(app, models) {
     app.post("/folder/:projectId", helpers.checkIfAuthenticated, function(req, res) {
         models.Project.findById(req.params.projectId, function(err, project) {
             if (helpers.checkIfUserIsAuthorized(req.user, project.users)) {
-                emitter.emit("projectFound", project, req.body, res);
+                emitter.emit("createFolder", project, req.body, res);
             } else {
                 res.status(403);
                 res.send({error: "User not authorized to access project.", statusCode: 403});

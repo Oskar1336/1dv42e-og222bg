@@ -5,7 +5,7 @@ angular.module("OnlineEditor").controller("InitEditorCtrl", [
         "use strict";
         $("body").css("background-color", "#403333");
         if ($("#53479ae199").html() === "") {
-            window.location = "#/";
+            window.location = "/auth/github";
         }
     }
 ]);

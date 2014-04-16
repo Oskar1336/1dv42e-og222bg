@@ -1,0 +1,55 @@
+<div class="editor-container full-window" data-ng-controller="EditorCtrl">
+    <div class="edit-wrapper">
+        <div class="top-menu">
+            <div class="dropdown editor-menu-item">
+                <a id="fileDDL" data-toggle="dropdown" href="javascript:void(0);">File</a>
+                <ul class="dropdown-menu" role="menu" aria-labelledby="fileDDL">
+                    <li role="presentation"><a role="menuitem" tabindex="-1" href="javascript:void(0);" data-ng-click="createFile()"><span class="glyphicon glyphicon-file"></span> New file</a></li>
+                    <li role="presentation"><a role="menuitem" tabindex="-1" href="javascript:void(0);" data-ng-click="createFolder()"><span class="glyphicon glyphicon-folder-close"></span> New folder</a></li>
+                    <li role="presentation"><a role="menuitem" tabindex="-1" href="javascript:void(0);" data-ng-click="saveAll()"><span class="glyphicon glyphicon-floppy-disk"></span> Save all</a></li>
+                </ul>
+            </div>
+            <a href="javascript:void(0);" class="editor-menu-item" data-ng-click="options()">Options</a>
+        </div>
+
+        <div class="left-side-bar">
+            <ul class="list-group">
+                <li class="list-group-item" data-ng-repeat="folder in project.rootFolder.folders"
+                    data-ng-include="'/app/Editor/Views/FolderTreeStructureTemplate.html'"></li>
+                <li class="list-group-item">
+                    <span class="pointer" data-ng-click="initAddFolder(project.rootFolder._id, $index)">
+                        <span class="glyphicon glyphicon-plus"></span>&nbsp;&nbsp;Add folder
+                    </span>
+                </li>
+            </ul>
+        </div>
+
+        <div class="code-wrapper">
+            <div class="row-count">
+                <div>1</div>
+                <div>2</div>
+                <div>3</div>
+                <div>4</div>
+                <div>5</div>
+                <div>6</div>
+                <div>7</div>
+                <div>8</div>
+                <div>9</div>
+                <div>10</div>
+            </div>
+            <div class="code-content">
+                <!-- use <pre> if not html code https://developer.mozilla.org/en-US/docs/Web/HTML/Element/pre -->
+                <div>&lt;html&gt;</div>
+                <div>&nbsp;&nbsp;&nbsp;&nbsp;&lt;head&gt;</div>
+                <div>&nbsp;&nbsp;&nbsp;&nbsp;&lt;/head&gt;</div>
+                <div>&nbsp;&nbsp;&nbsp;&nbsp;</div>
+                <div>&nbsp;&nbsp;&nbsp;&nbsp;&lt;body&gt;</div>
+                <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;div&gt;</div>
+                <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;hej</div>
+                <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;/div&gt;</div>
+                <div>&nbsp;&nbsp;&nbsp;&nbsp;&lt;/body&gt;</div>
+                <div>&lt;/html&gt;</div>
+            </div>
+        </div>
+    </div>
+</div>

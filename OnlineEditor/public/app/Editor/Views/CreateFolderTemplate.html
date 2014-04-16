@@ -1,0 +1,18 @@
+<div class="modal-header">
+    <h3>Create folder</h3>
+</div>
+<div class="modal-body">
+    <div id="createAlertBox" class="alert hidden"></div>
+    <div class="form-horizontal">
+        <div class="form-group">
+            <label for="folderName" class="col-sm-3 control-label">Folder name:</label>
+            <div class="col-sm-8">
+                <input type="text" id="folderName" class="form-control" data-ng-model="newFolder.folderName" name="folderName" />
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal-footer">
+    <button class="btn btn-primary" data-ng-click="saveFolder()">Save folder</button>
+    <button class="btn btn-danger" data-ng-click="cancel()">Cancel</button>
+</div>

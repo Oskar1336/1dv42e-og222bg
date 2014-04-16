@@ -6,6 +6,6 @@ module.exports = function(mongoose) {
         projectName: String,
         owner: { type: Schema.Types.ObjectId, ref: "User" },
         users: [ { type: Schema.Types.ObjectId, ref: "User" } ],
-        folders: [ { type: Schema.Types.ObjectId, ref: "Folder" } ]
+        rootFolder: { type: Schema.Types.ObjectId, ref: "Folder" }
     }));
 };

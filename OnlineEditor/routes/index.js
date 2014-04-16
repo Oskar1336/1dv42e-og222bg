@@ -8,8 +8,4 @@ module.exports = function(app) {
             res.render("index", { user: null });
         }
     });
-
-    app.get("/test", function(req, res) {
-        res.send(req.user);
-    });
 };
