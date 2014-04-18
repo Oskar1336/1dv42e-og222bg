@@ -1,13 +1,14 @@
 
 
 module.exports = function(app, models, StringValidation) {
-    var helpers = require("../models/helperFunctions");
+    var authHelpers = require("../models/authHelperFunctions");
+    var folderHelpers = require("../models/folderHelperFunctions");
     var events = require("events");
     var emitter = new events.EventEmitter();
 
 
     // Route for getting all projects avaiable for current logged user.
-    app.get("/projects", helpers.checkIfAuthenticated, function(req, res) {
+    app.get("/projects", authHelpers.checkIfAuthenticated, function(req, res) {
         models.Project.find({users: req.user._id}).populate("owner users rootFolder").exec(function(err, projects) {
             if (err) {
                 res.status(500);
@@ -20,14 +21,14 @@ module.exports = function(app, models, StringValidation) {
     });
     
     // Route for getting a specific project.
-    app.get("/projects/:id", helpers.checkIfAuthenticated, function(req, res) {
+    app.get("/projects/:id", authHelpers.checkIfAuthenticated, function(req, res) {
         models.Project.findById(req.params.id).populate("users rootFolder owner").exec(function(err, project) {
             if (err) {
                 res.status(500);
                 res.send({error: err, statusCode: 500});
             } else {
                 // Check if current user has access to selected project.
-                if (helpers.checkIfUserIsPartOfProject(req.user, project.users)) {
+                if (authHelpers.checkIfUserIsPartOfProject(req.user, project.users)) {
                     res.status(200);
                     res.send({content: project, statusCode: 200});
                 } else {
@@ -100,7 +101,7 @@ module.exports = function(app, models, StringValidation) {
     });
 
     // Route for creating new project.
-    app.post("/projects", helpers.checkIfAuthenticated, function(req, res) {
+    app.post("/projects", authHelpers.checkIfAuthenticated, function(req, res) {
         if (validateProjectInfo(req.body)) {
             // Create root folder.
             var rootFolder = new models.Folder({
@@ -123,14 +124,15 @@ module.exports = function(app, models, StringValidation) {
     });
 
     // @TODO: Refactor to avoid callback hell.
+    // @TODO: Validate user input.
     // Route for updating project.
-    app.put("/projects/:id", helpers.checkIfAuthenticated, function(req, res) {
+    app.put("/projects/:id", authHelpers.checkIfAuthenticated, function(req, res) {
         models.Project.findById(req.params.id, function(err, project) {
             if (err) {
                 res.status(500);
                 res.send({error: err, statusCode: 500});
             } else {
-                if (!helpers.checkIfUserIsAuthorized(req.user, project.users)) {
+                if (!authHelpers.checkIfUserIsAuthorized(req.user, project.users)) {
                     res.status(403);
                     res.send({error: "User not authorized to access project", statusCode: 403});
                 } else {
@@ -188,17 +190,14 @@ module.exports = function(app, models, StringValidation) {
     });
 
     // Route for removing a project.
-    app.delete("/projects/:id", helpers.checkIfAuthenticated, function(req, res) {
-        models.Project.findById(req.params.id).populate("folders").exec(function(err, project) {
+    app.delete("/projects/:id", authHelpers.checkIfAuthenticated, function(req, res) {
+        models.Project.findById(req.params.id, function(err, project) {
             if (StringValidation(req.user._id).s === StringValidation(project.owner).s) {
-                // Remove all folders in project.
-                for (var i = 0; i < project.folders.length; i++) {
-                    // Delete folder files.
-                    for (var x = 0; x < project.folders[i].files.length; x++) {
-                        models.File.remove({_id: project.folders[i].files[i]}).exec();
+                models.Folder.find({project: project._id}, function(foldererr, folders) {
+                    for (var i = 0; i < folders.length; i++) {
+                        folderHelpers.removeFolder(folders[i], models);
                     }
-                    models.Folder.remove({_id: project.folders[i]._id}).exec();
-                }
+                });
                 // Remove project reference from project users.
                 for (var y = 0; y < project.users.length; y++) {
                     models.User.findById(project.users[y], function(err, user) {
@@ -226,5 +225,19 @@ module.exports = function(app, models, StringValidation) {
             return false;
         }
         return true;
+    }
+
+    function removeFolder (folderId, models) {
+        models.Folder.findById(folderId, function(err, folder) {
+            if (!err && folder) {
+                for (var i = 0; i < folder.folders.length; i++) {
+                    removeFolder(folder.folders[i]);
+                }
+                for (var f = 0; f < folder.files.length; f++) {
+                    models.File.remove({_id: folder.files[f]}).exec();
+                }
+                models.Folder.remove({_id: folder._id}).exec();
+            }
+        });
     }
 };

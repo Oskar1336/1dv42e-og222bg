@@ -1,6 +1,8 @@
 <span class="pointer" data-ng-click="expandFolder(folder)">
     <span class="glyphicon glyphicon-folder-close"></span>&nbsp;&nbsp;{{folder.folderName}}
 </span>
+<a href="javascript:void(0);" data-ng-click="removeFolder(folder)" class="pull-right"><span class="glyphicon glyphicon-remove"></span> </a>
+<a href="javascript:void(0);" data-ng-click="initEditFolder(folder)" class="pull-right"><span class="glyphicon glyphicon-edit"></span></a>
 <ul data-ng-show="showFolders[folder._id]">
     <li data-ng-repeat="folder in subfolders[folder._id]" data-ng-include="'/app/Editor/Views/FolderTreeStructureTemplate.html'"></li>
     <li data-ng-repeat="file in folder.files">

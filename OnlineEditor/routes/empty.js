@@ -1,31 +1,32 @@
 
 
 module.exports = function(app, models) {
-    app.get("/empty", function() {
+    app.get("/empty", function(req, res) {
         models.User.find({}).exec(function(err, users) {
+            console.log("Found users: " + users.length);
             for (var i = 0; i < users.length; i++) {
                 models.User.remove({_id: users[i]._id}).exec();
             }
         });
-        res.send("Done user");
         models.Project.find({}).exec(function(err, projects) {
+            console.log("Found projects: " + projects.length);
             for (var i = 0; i < projects.length; i++) {
                 models.Project.remove({_id: projects[i]._id}).exec();
             }
         });
-        res.send("Done project");
         models.File.find({}).exec(function(err, files) {
+            console.log("Found files: " + files.length);
             for (var i = 0; i < files.length; i++) {
                 models.File.remove({_id: files[i]._id}).exec();
             }
         });
-        res.send("Done file");
         models.Folder.find({}).exec(function(err, folders) {
+            console.log("Found folders: " + folders.length);
             for (var i = 0; i < folders.length; i++) {
                 models.Folder.remove({_id: folders[i]._id}).exec();
             }
         });
-        res.send("Done folder");
+        res.send("Done");
     });
 
     app.get("/emptyusers", function(req, res) {

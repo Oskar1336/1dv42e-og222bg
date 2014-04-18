@@ -73,9 +73,15 @@ a {
     float:left;
 }
 
+.menu-list {
+    margin-top:5px;
+    margin-bottom: 5px;
+    height: 25px;
+}
+
 .code-wrapper {
-    width: 77%;
     height: 100%;
+    width: 75%;
     float:left;
     color: white;
     font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace;
@@ -96,10 +102,17 @@ a {
     text-align: center;
 }
 
+
+
+
 .pointer:hover{
     cursor: pointer;
 }
 
 .margin-top {
     margin-top: 10px;
+}
+
+.margin-bottom {
+    margin-bottom: 10px;
 }

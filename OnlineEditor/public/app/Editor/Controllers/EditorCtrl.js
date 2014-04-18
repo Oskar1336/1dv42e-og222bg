@@ -39,6 +39,22 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
             }
         };
 
+        $scope.removeFolder = function(folder) {
+            if (confirm("Are you sure you want to delete " + folder.folderName + "?")) {
+                FolderFactory.deleteFolder(folder._id).success(function(data) {
+                    var rootIndex = $scope.project.rootFolder.folders.indexOf(folder);
+                    if (rootIndex !== -1) {
+                        $scope.project.rootFolder.folders.splice(rootIndex, 1);
+                    } else {
+                        $rootScope.subfolders[folder.parent].splice($rootScope.subfolders[folder.parent].indexOf(folder), 1);
+                    }
+                }).error(function(error) {
+                    console.log(error);
+                });
+            }
+        };
+
+
         $scope.initAddFolder = function(parentId) {
             var modalInstance = $modal.open({
                 templateUrl: "app/Editor/Views/CreateFolderTemplate.html",

@@ -4,12 +4,6 @@ angular.module("OnlineEditor.Editor").factory("FolderFactory", ["$http",
     function($http) {
         "use strict";
         return {
-            getProjectFolders: function(projectId) {
-                return $http({
-                    method: "GET",
-                    url: "/folders/"+projectId
-                });
-            },
             getById: function(folderId) {
                 return $http({
                     method: "GET",

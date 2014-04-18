@@ -1,7 +1,8 @@
 
 
 module.exports = function(app, models) {
-    var helpers = require("../models/helperFunctions");
+    var authHelpers = require("../models/authHelperFunctions");
+    var folderHelpers = require("../models/folderHelperFunctions");
     var events = require("events");
     var emitter = new events.EventEmitter();
 
@@ -50,33 +51,30 @@ module.exports = function(app, models) {
         });
     });
 
-    // @TODO: stop populating project.
-    app.get("/folders/:projectId", helpers.checkIfAuthenticated, function(req, res) {
-        models.Folder.find({project: req.params.projectId}).populate("files project folders").exec(function(err, folders) {
-            if (err) {
-                res.status(500);
-                res.send({error: err, statusCode: 500});
-            } else {
-                if (helpers.checkIfUserIsAuthorized(req.user, folders[0].project.users)) {
-                    res.status(200);
-                    res.send(folders);
-                } else {
-                    res.status(403);
-                    res.send({error: "User not authorized to access this project.", statusCode:403});
-                }
-            }
-        });
-    });
+    // app.get("/folders/:projectId", authHelpers.checkIfAuthenticated, function(req, res) {
+    //     models.Folder.find({project: req.params.projectId}).populate("files project folders").exec(function(err, folders) {
+    //         if (err) {
+    //             res.status(500);
+    //             res.send({error: err, statusCode: 500});
+    //         } else {
+    //             if (authHelpers.checkIfUserIsAuthorized(req.user, folders[0].project.users)) {
+    //                 res.status(200);
+    //                 res.send(folders);
+    //             } else {
+    //                 res.status(403);
+    //                 res.send({error: "User not authorized to access this project.", statusCode:403});
+    //             }
+    //         }
+    //     });
+    // });
     
-    // http://jsfiddle.net/brendanowen/uXbn6/8/
-    // http://stackoverflow.com/questions/11854514/is-it-possible-to-make-a-tree-view-with-angular
-    app.get("/folder/:id", helpers.checkIfAuthenticated, function(req, res) {
+    app.get("/folder/:id", authHelpers.checkIfAuthenticated, function(req, res) {
         models.Folder.findById(req.params.id).populate("files project folders").exec(function(err, folder) {
             if (err) {
                 res.status(500);
                 res.send({error: err, statusCode: 500});
             } else {
-                if (helpers.checkIfUserIsAuthorized(req.user, folder.project.users)) {
+                if (authHelpers.checkIfUserIsAuthorized(req.user, folder.project.users)) {
                     res.status(200);
                     res.send(folder);
                 } else {
@@ -87,9 +85,9 @@ module.exports = function(app, models) {
         });
     });
 
-    app.post("/folder/:projectId", helpers.checkIfAuthenticated, function(req, res) {
+    app.post("/folder/:projectId", authHelpers.checkIfAuthenticated, function(req, res) {
         models.Project.findById(req.params.projectId, function(err, project) {
-            if (helpers.checkIfUserIsAuthorized(req.user, project.users)) {
+            if (authHelpers.checkIfUserIsAuthorized(req.user, project.users)) {
                 emitter.emit("createFolder", project, req.body, res);
             } else {
                 res.status(403);
@@ -98,11 +96,34 @@ module.exports = function(app, models) {
         });
     });
 
-    app.put("/folder/:id", helpers.checkIfAuthenticated, function(req, res) {
+    app.put("/folder/:id", authHelpers.checkIfAuthenticated, function(req, res) {
 
     });
 
-    app.delete("/folder/:id", function(req, res) {
-
+    app.delete("/folder/:id", authHelpers.checkIfAuthenticated, function(req, res) {
+        models.Folder.findById(req.params.id).populate("project").exec(function(err, folder) {
+            if (authHelpers.checkIfUserIsAuthorized(req.user, folder.project.users)) {
+                removeFolder(folder._id);
+                res.status(204);
+                res.send("Deleted");
+            } else {
+                res.status(403);
+                res.send({error: err, statusCode:403});
+            }
+        });
     });
+
+    function removeFolder (folderId) {
+        models.Folder.findById(folderId, function(err, folder) {
+            if (!err && folder) {
+                for (var i = 0; i < folder.folders.length; i++) {
+                    removeFolder(folder.folders[i]);
+                }
+                for (var f = 0; f < folder.files.length; f++) {
+                    models.File.remove({_id: folder.files[f]}).exec();
+                }
+                models.Folder.remove({_id: folder._id}).exec();
+            }
+        });
+    }
 };
