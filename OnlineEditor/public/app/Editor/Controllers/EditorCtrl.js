@@ -4,7 +4,7 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
     function($scope, $rootScope, $cookieStore, $modal, $compile, FolderFactory, AlertFactory) {
         "use strict";
         $scope.showFolders = {};
-        $scope.subfolders = {};
+        $rootScope.subfolders = {};
 
         $scope.project = $rootScope.selectedProject;
         $rootScope.$watch("selectedProject", function() {
@@ -22,14 +22,14 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
             if ($scope.showFolders[folder._id]) { // Hide subfolders.
                 $scope.showFolders[folder._id] = false;
             } else { // Show subfolders.
-                $scope.subfolders[folder._id] = [];
+                $rootScope.subfolders[folder._id] = [];
                 for (var i = 0; i < folder.folders.length; i++) {
                     if (typeof folder.folders[i] === "object") {
-                        $scope.subfolders[folder._id].push(folder.folders[i]);
+                        $rootScope.subfolders[folder._id].push(folder.folders[i]);
                     } else if (typeof folder.folders[i] === "string") {
                         // @TODO: Cache folders.
                         FolderFactory.getById(folder.folders[i]).success(function(data) {
-                            $scope.subfolders[folder._id].push(data);
+                            $rootScope.subfolders[folder._id].push(data);
                         }).error(function(error) {
                             console.log(error);
                         });
@@ -65,11 +65,10 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
                 $scope.newFolder.parent = parentId;
                 if (validate()) {
                     FolderFactory.createFolder($scope.newFolder, project._id).success(function(data) {
-                        console.log(data);
-                        if (parentId === $scope.project.rootFolder._id) {
+                        if (parentId === $rootScope.selectedProject.rootFolder._id) {
                             $rootScope.selectedProject.rootFolder.folders.push(data);
                         } else {
-                            $scope.subfolders[parentId].push(data);
+                            $rootScope.subfolders[parentId].push(data);
                         }
                         $modalInstance.close();
                     }).error(function(error) {
@@ -89,10 +88,6 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
 
                 return valid;
             };
-        };
-
-        var findFolder = function(folderId) {
-            // Loop throug every folder and subfolders and find a specific folder.
         };
     }
 ]);
