@@ -5,43 +5,7 @@ module.exports = function(app, models) {
     var events = require("events");
     var emitter = new events.EventEmitter();
 
-    // @TODO: stop populating project.
-    app.get("/folders/:projectId", helpers.checkIfAuthenticated, function(req, res) {
-        models.Folder.find({project: req.params.projectId}).populate("files project folders").exec(function(err, folders) {
-            if (err) {
-                res.status(500);
-                res.send({error: err, statusCode: 500});
-            } else {
-                if (helpers.checkIfUserIsAuthorized(req.user, folders[0].project.users)) {
-                    res.status(200);
-                    res.send(folders);
-                } else {
-                    res.status(403);
-                    res.send({error: "User not authorized to access this project.", statusCode:403});
-                }
-            }
-        });
-    });
-
-    // http://jsfiddle.net/brendanowen/uXbn6/8/
-    // http://stackoverflow.com/questions/11854514/is-it-possible-to-make-a-tree-view-with-angular
-    app.get("/folder/:id", helpers.checkIfAuthenticated, function(req, res) {
-        models.Folder.findById(req.params.id).populate("files project folders").exec(function(err, folder) {
-            if (err) {
-                res.status(500);
-                res.send({error: err, statusCode: 500});
-            } else {
-                if (helpers.checkIfUserIsAuthorized(req.user, folder.project.users)) {
-                    res.status(200);
-                    res.send(folder);
-                } else {
-                    res.status(403);
-                    res.send({error: "User not authorized to access this folder.", statusCode: 403});
-                }
-            }
-        });
-    });
-
+    // Events
     emitter.on("sendFolder", function(folder, res) {
         models.Folder.populate(folder, {path: "files project folders"}, function(err, resFolder) {
             if (err) {
@@ -82,6 +46,43 @@ module.exports = function(app, models) {
                 res.send({error: err, statusCode: 500});
             } else {
                 emitter.emit("saveNewFolderToParent", folder, project, res);
+            }
+        });
+    });
+
+    // @TODO: stop populating project.
+    app.get("/folders/:projectId", helpers.checkIfAuthenticated, function(req, res) {
+        models.Folder.find({project: req.params.projectId}).populate("files project folders").exec(function(err, folders) {
+            if (err) {
+                res.status(500);
+                res.send({error: err, statusCode: 500});
+            } else {
+                if (helpers.checkIfUserIsAuthorized(req.user, folders[0].project.users)) {
+                    res.status(200);
+                    res.send(folders);
+                } else {
+                    res.status(403);
+                    res.send({error: "User not authorized to access this project.", statusCode:403});
+                }
+            }
+        });
+    });
+    
+    // http://jsfiddle.net/brendanowen/uXbn6/8/
+    // http://stackoverflow.com/questions/11854514/is-it-possible-to-make-a-tree-view-with-angular
+    app.get("/folder/:id", helpers.checkIfAuthenticated, function(req, res) {
+        models.Folder.findById(req.params.id).populate("files project folders").exec(function(err, folder) {
+            if (err) {
+                res.status(500);
+                res.send({error: err, statusCode: 500});
+            } else {
+                if (helpers.checkIfUserIsAuthorized(req.user, folder.project.users)) {
+                    res.status(200);
+                    res.send(folder);
+                } else {
+                    res.status(403);
+                    res.send({error: "User not authorized to access this folder.", statusCode: 403});
+                }
             }
         });
     });

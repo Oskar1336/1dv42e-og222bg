@@ -1,15 +1,15 @@
-<span class="pointer" data-ng-click="expandFolder(folder, $index)">
+<span class="pointer" data-ng-click="expandFolder(folder)">
     <span class="glyphicon glyphicon-folder-close"></span>&nbsp;&nbsp;{{folder.folderName}}
 </span>
 <ul data-ng-show="showFolders[folder._id]">
-    <li data-ng-repeat="folder in folder.folders" data-ng-include="'/app/Editor/Views/FolderTreeStructureTemplate.html'"></li>
+    <li data-ng-repeat="folder in subfolders[folder._id]" data-ng-include="'/app/Editor/Views/FolderTreeStructureTemplate.html'"></li>
     <li data-ng-repeat="file in folder.files">
         <span class="pointer" data-ng-click="loadFile(file)">
             <span class="glyphicon"></span>&nbsp;&nbsp;{{file.fileName}}
         </span>
     </li>
     <li>
-        <span class="pointer" data-ng-click="initAddFolder(folder._id, $index)">
+        <span class="pointer" data-ng-click="initAddFolder(folder._id)">
             <span class="glyphicon glyphicon-plus"></span>&nbsp;&nbsp;Add folder
         </span>
     </li>
