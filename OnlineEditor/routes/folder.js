@@ -1,8 +1,8 @@
 
 
 module.exports = function(app, models) {
+    var S = require("string");
     var authHelpers = require("../models/authHelperFunctions");
-    var folderHelpers = require("../models/folderHelperFunctions");
     var events = require("events");
     var emitter = new events.EventEmitter();
 
@@ -97,18 +97,38 @@ module.exports = function(app, models) {
     });
 
     app.put("/folder/:id", authHelpers.checkIfAuthenticated, function(req, res) {
-
+        models.Folder.findById(req.params.id, function(err, folder) {
+            if (err) {
+                res.status(500);
+                res.send({error: err, statusCode:500});
+            } else {
+                if (folderNameValid(req.body.folderName)) {
+                    folder.folderName = req.body.folderName;
+                    folder.save();
+                    res.status(200);
+                    res.send(folder);
+                } else {
+                    res.status(400);
+                    res.send({error: "User not authorized to access current folder", statusCode:400});
+                }
+            }
+        });
     });
 
     app.delete("/folder/:id", authHelpers.checkIfAuthenticated, function(req, res) {
         models.Folder.findById(req.params.id).populate("project").exec(function(err, folder) {
-            if (authHelpers.checkIfUserIsAuthorized(req.user, folder.project.users)) {
-                removeFolder(folder._id);
-                res.status(204);
-                res.send("Deleted");
+            if (err) {
+                res.status(500);
+                res.send({error: err, statusCode: 500});
             } else {
-                res.status(403);
-                res.send({error: err, statusCode:403});
+                if (authHelpers.checkIfUserIsAuthorized(req.user, folder.project.users)) {
+                    removeFolder(folder._id);
+                    res.status(204);
+                    res.send("Deleted");
+                } else {
+                    res.status(403);
+                    res.send({error: err, statusCode:403});
+                }
             }
         });
     });
@@ -125,5 +145,16 @@ module.exports = function(app, models) {
                 models.Folder.remove({_id: folder._id}).exec();
             }
         });
+    }
+
+    function folderNameValid (folderName) {
+        var valid = true;
+        if (!folderName) {
+            valid = false;
+        }
+        if (S(folderName).stripTags().s !== folderName) {
+            valid = false;
+        }
+        return valid;
     }
 };

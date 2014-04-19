@@ -54,6 +54,50 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
             }
         };
 
+        $scope.initEditFolder = function(folder) {
+            var modalInstance = $modal.open({
+                templateUrl: "app/Editor/Views/CreateFolderTemplate.html",
+                controller: EditFolderCtrl,
+                resolve: {
+                    folder: function() {
+                        return folder;
+                    }
+                }
+            });
+        };
+
+        var EditFolderCtrl = function($scope, $modalInstance, $rootScope, folder) {
+            $scope.newFolder = {};
+            $scope.newFolder.folderName = folder.folderName;
+
+            $scope.saveFolder = function() {
+                if (valid()) {
+                    FolderFactory.updateFolder($scope.newFolder, folder._id).success(function(data) {
+                        var rootIndex = $rootScope.selectedProject.rootFolder.folders.indexOf(folder);
+                        if (rootIndex !== -1) {
+                            $rootScope.selectedProject.rootFolder.folders[rootIndex].folderName = $scope.newFolder.folderName;
+                        } else {
+                            $rootScope.subfolders[folder.parent][$rootScope.subfolders[folder.parent].indexOf(folder)].folderName = $scope.newFolder.folderName;
+                        }
+                        $modalInstance.close();
+                    }).error(function(error) {
+                        console.log(error);
+                    });
+                } else {
+                    AlertFactory.showMessage("Folder name is not valid", "alert-danger", "createAlertBox");
+                }
+            };
+
+            $scope.cancel = function() {
+                $modalInstance.dismiss("Cancel");
+            };
+
+            var valid = function() {
+                var valid = true;
+
+                return valid;
+            };
+        };
 
         $scope.initAddFolder = function(parentId) {
             var modalInstance = $modal.open({
@@ -79,7 +123,7 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
 
             $scope.saveFolder = function() {
                 $scope.newFolder.parent = parentId;
-                if (validate()) {
+                if (valid()) {
                     FolderFactory.createFolder($scope.newFolder, project._id).success(function(data) {
                         if (parentId === $rootScope.selectedProject.rootFolder._id) {
                             $rootScope.selectedProject.rootFolder.folders.push(data);
@@ -99,9 +143,8 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
                 $modalInstance.dismiss("Cancel");
             };
 
-            var validate = function() {
+            var valid = function() {
                 var valid = true;
-
                 return valid;
             };
         };

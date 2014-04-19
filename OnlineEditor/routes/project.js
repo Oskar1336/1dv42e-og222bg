@@ -2,7 +2,6 @@
 
 module.exports = function(app, models, StringValidation) {
     var authHelpers = require("../models/authHelperFunctions");
-    var folderHelpers = require("../models/folderHelperFunctions");
     var events = require("events");
     var emitter = new events.EventEmitter();
 
@@ -195,7 +194,7 @@ module.exports = function(app, models, StringValidation) {
             if (StringValidation(req.user._id).s === StringValidation(project.owner).s) {
                 models.Folder.find({project: project._id}, function(foldererr, folders) {
                     for (var i = 0; i < folders.length; i++) {
-                        folderHelpers.removeFolder(folders[i], models);
+                        removeFolder(folders[i]);
                     }
                 });
                 // Remove project reference from project users.
