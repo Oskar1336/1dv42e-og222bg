@@ -18,10 +18,13 @@ angular.module("OnlineEditor.Editor").factory("FileFactory", ["$http",
                 });
             },
             saveFile: function(content, fileId) {
+                var data = {};
+                data.content = content;
+                data.save = true;
                 return $http({
                     method: "PUT",
                     url: "/file/"+fileId,
-                    data: content
+                    data: data
                 });
             },
             updateFile: function(file, fileId) {

@@ -6,6 +6,23 @@ module.exports = function(app, models) {
     var emitter = new events.EventEmitter();
     var S = require("string");
 
+    app.get("/file/:fileId", authHelpers.checkIfAuthenticated, function(req, res) {
+        models.File.findById(req.params.fileId).populate("folder").exec(function(err, file) {
+            if (err) {
+                res.status(500);
+                res.send({error: err, statusCode: 500});
+            } else {
+                if (authHelpers.findProjectAndValidateUser(req.user, file.folder.project, models)) {
+                    res.status(200);
+                    res.send(file);
+                } else {
+                    res.status(403);
+                    res.send({error: "User not authorized to access file.", statusCode: 403});
+                }
+            }
+        });
+    });
+
     emitter.on("saveNewFileToFolder", function(file, folder, res) {
         models.Folder.findById(folder._id, function(err, folder) {
             if (err) {
@@ -60,18 +77,42 @@ module.exports = function(app, models) {
         });
     });
 
-    app.get("/file/:fileId", authHelpers.checkIfAuthenticated, function(req, res) {
+    app.put("/file/:fileId", authHelpers.checkIfAuthenticated, function(req, res) {
         models.File.findById(req.params.fileId).populate("folder").exec(function(err, file) {
             if (err) {
-                res.status(500);
-                res.send({error: err, statusCode: 500});
+
             } else {
                 if (authHelpers.findProjectAndValidateUser(req.user, file.folder.project, models)) {
-                    res.status(200);
-                    res.send(file);
+                    if (req.save) {
+                        file.content = req.body.content;
+                        file.save(function(err) {
+                            if (err) {
+                                res.status(500);
+                                res.send({error: err, statusCode: 500});
+                            } else {
+                                res.status(200);
+                                res.send(file);
+                            }
+                        });
+                    } else if (validateFile(req.body)) {
+                        file.name = req.body.fileName;
+                        file.type = req.body.fileType;
+                        file.save(function(err) {
+                            if (err) {
+                                res.status(500);
+                                res.send({error: err, statusCode: 500});
+                            } else {
+                                res.status(200);
+                                res.send(file);
+                            }
+                        });
+                    } else {
+                        res.status(400);
+                        res.send({error: "Params missing or not valid", statusCode: 400});
+                    }
                 } else {
                     res.status(403);
-                    res.send({error: "User not authorized to access file.", statusCode: 403});
+                    res.send({error: "User is not authorized to access file.", statusCode: 403});
                 }
             }
         });

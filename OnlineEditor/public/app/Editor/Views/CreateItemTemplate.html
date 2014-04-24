@@ -1,5 +1,6 @@
 <div class="modal-header">
-    <h3>Create folder</h3>
+    <h3 data-ng-show="isFolder">Create folder</h3>
+    <h3 data-ng-hide="isFolder">Create file</h3>
 </div>
 <div class="modal-body">
     <div id="createAlertBox" class="alert hidden"></div>
@@ -19,7 +20,7 @@
                 <label for="fileType" class="col-sm-3 control-label">File type:</label>
                 <div class="col-sm-8">
                     <select class="form-control" data-ng-model="newFile.fileType">
-                        <option data-ng-repeat="lang in supportedLangs" value="{{lang.value}}">{{lang.name}}</option>
+                        <option data-ng-select="newFile.fileType == lang.value" data-ng-repeat="lang in supportedLangs" value="{{lang.value}}">{{lang.name}}</option>
                     </select>
                 </div>
             </span>
