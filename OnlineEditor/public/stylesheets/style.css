@@ -74,9 +74,8 @@ a {
 }
 
 .menu-list {
-    margin-top:5px;
-    margin-bottom: 5px;
-    height: 25px;
+    margin-left: 0;
+    list-style: none;   
 }
 
 .code-wrapper {

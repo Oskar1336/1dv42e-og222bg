@@ -16,6 +16,12 @@
             <ul class="list-group">
                 <li class="list-group-item" data-ng-repeat="folder in project.rootFolder.folders"
                     data-ng-include="'/app/Editor/Views/FolderTreeStructureTemplate.html'"></li>
+                <li class="list-group-item" data-ng-repeat="file in project.rootFolder.files">
+                    <span class="pointer" data-ng-click="loadFile(file)">
+                        <span class="glyphicon glyphicon-file"></span>&nbsp;&nbsp;{{file.name}}.{{file.type}}
+                    </span>
+                    <span data-ng-include="'/app/Editor/Views/ItemDropdownTemplate.html'"></span>
+                </li>
                 <li class="list-group-item">
                     <span class="pointer" data-ng-click="initAddFolder(project.rootFolder._id)">
                         <span class="glyphicon glyphicon-plus"></span>&nbsp;&nbsp;Add folder

@@ -5,7 +5,7 @@ var https = require("https"); // @TODO: Implement https
 var http = require('http');
 var path = require("path");
 var mongoose = require("mongoose");
-var StringValidation = require("string");
+var S = require("string");
 
 // Database configuration and mongoDB models.
 require("./config/mongodbConfig.js")(mongoose); // Database settings.
@@ -22,15 +22,16 @@ var app = module.exports = express();
 // App config.
 require("./config/config")(app, express, passport);
 
+// Index routes.
+require('./routes')(app);
 // Auth routes.
 require("./routes/auth")(app, models, passport);
-// Index routes
-require('./routes')(app);
 // Project routes.
-require("./routes/project")(app, models, StringValidation);
-
+require("./routes/project")(app, models, S);
+// Folder routes.
 require("./routes/folder")(app, models);
-
+// File routes.
+require("./routes/file")(app, models);
 
 require("./routes/empty")(app, models);
 

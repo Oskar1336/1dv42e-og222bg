@@ -25,5 +25,13 @@ module.exports = {
             }
         }
         return false;
+    },
+    findProjectAndValidateUser: function(currentUser, projectId, models) {
+        var that = this;
+        var valid = true;
+        models.Project.findById(projectId).populate("users").exec(function(err, project) {
+            valid = that.checkIfUserIsPartOfProject(currentUser, project.users);
+        });
+        return valid;
     }
 };

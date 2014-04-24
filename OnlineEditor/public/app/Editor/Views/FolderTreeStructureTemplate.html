@@ -1,14 +1,16 @@
 <span class="pointer" data-ng-click="expandFolder(folder)">
-    <span class="glyphicon glyphicon-folder-close"></span>&nbsp;&nbsp;{{folder.folderName}}
+    <span data-ng-hide="showFolders[folder._id]" class="glyphicon glyphicon-folder-close"></span>
+    <span data-ng-show="showFolders[folder._id]" class="glyphicon glyphicon-folder-open"></span>
+    &nbsp;&nbsp;{{folder.folderName}}
 </span>
-<a href="javascript:void(0);" data-ng-click="removeFolder(folder)" class="pull-right"><span class="glyphicon glyphicon-remove"></span> </a>
-<a href="javascript:void(0);" data-ng-click="initEditFolder(folder)" class="pull-right"><span class="glyphicon glyphicon-edit"></span></a>
-<ul data-ng-show="showFolders[folder._id]">
+<span data-ng-include="'/app/Editor/Views/ItemDropdownTemplate.html'"></span>
+<ul class="menu-list" data-ng-show="showFolders[folder._id]">
     <li data-ng-repeat="folder in subfolders[folder._id]" data-ng-include="'/app/Editor/Views/FolderTreeStructureTemplate.html'"></li>
-    <li data-ng-repeat="file in folder.files">
+    <li data-ng-repeat="file in folderFiles[folder._id]">
         <span class="pointer" data-ng-click="loadFile(file)">
-            <span class="glyphicon"></span>&nbsp;&nbsp;{{file.fileName}}
+            <span class="glyphicon glyphicon-file"></span>&nbsp;&nbsp;{{file.name}}.{{file.type}}
         </span>
+        <span data-ng-include="'/app/Editor/Views/ItemDropdownTemplate.html'"></span>
     </li>
     <li>
         <span class="pointer" data-ng-click="initAddFolder(folder._id)">

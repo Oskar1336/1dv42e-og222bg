@@ -50,23 +50,6 @@ module.exports = function(app, models) {
             }
         });
     });
-
-    // app.get("/folders/:projectId", authHelpers.checkIfAuthenticated, function(req, res) {
-    //     models.Folder.find({project: req.params.projectId}).populate("files project folders").exec(function(err, folders) {
-    //         if (err) {
-    //             res.status(500);
-    //             res.send({error: err, statusCode: 500});
-    //         } else {
-    //             if (authHelpers.checkIfUserIsAuthorized(req.user, folders[0].project.users)) {
-    //                 res.status(200);
-    //                 res.send(folders);
-    //             } else {
-    //                 res.status(403);
-    //                 res.send({error: "User not authorized to access this project.", statusCode:403});
-    //             }
-    //         }
-    //     });
-    // });
     
     app.get("/folder/:id", authHelpers.checkIfAuthenticated, function(req, res) {
         models.Folder.findById(req.params.id).populate("files project folders").exec(function(err, folder) {
@@ -87,11 +70,16 @@ module.exports = function(app, models) {
 
     app.post("/folder/:projectId", authHelpers.checkIfAuthenticated, function(req, res) {
         models.Project.findById(req.params.projectId, function(err, project) {
-            if (authHelpers.checkIfUserIsAuthorized(req.user, project.users)) {
-                emitter.emit("createFolder", project, req.body, res);
+            if (err) {
+                res.status(500);
+                res.send({error: err, statusCode: 500});
             } else {
-                res.status(403);
-                res.send({error: "User not authorized to access project.", statusCode: 403});
+                if (authHelpers.checkIfUserIsAuthorized(req.user, project.users)) {
+                    emitter.emit("createFolder", project, req.body, res);
+                } else {
+                    res.status(403);
+                    res.send({error: "User not authorized to access project.", statusCode: 403});
+                }
             }
         });
     });

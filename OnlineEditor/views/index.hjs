@@ -42,6 +42,7 @@
     <script src="/app/Editor/Module.js"></script>
     <script src="/app/Editor/Controllers/EditorCtrl.js"></script>
     <script src="/app/Editor/Services/FolderFactory.js"></script>
+    <script src="/app/Editor/Services/FileFactory.js"></script>
 
   </body>
 </html>

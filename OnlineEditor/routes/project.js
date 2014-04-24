@@ -1,6 +1,6 @@
 
 
-module.exports = function(app, models, StringValidation) {
+module.exports = function(app, models, S) {
     var authHelpers = require("../models/authHelperFunctions");
     var events = require("events");
     var emitter = new events.EventEmitter();
@@ -191,7 +191,7 @@ module.exports = function(app, models, StringValidation) {
     // Route for removing a project.
     app.delete("/projects/:id", authHelpers.checkIfAuthenticated, function(req, res) {
         models.Project.findById(req.params.id, function(err, project) {
-            if (StringValidation(req.user._id).s === StringValidation(project.owner).s) {
+            if (S(req.user._id).s === S(project.owner).s) {
                 models.Folder.find({project: project._id}, function(foldererr, folders) {
                     for (var i = 0; i < folders.length; i++) {
                         removeFolder(folders[i]);
@@ -220,7 +220,7 @@ module.exports = function(app, models, StringValidation) {
         if (!project.projectName) {
             return false;
         }
-        if (StringValidation(project.projectName).stripTags().s !== project.projectName) {
+        if (S(project.projectName).stripTags().s !== project.projectName) {
             return false;
         }
         return true;

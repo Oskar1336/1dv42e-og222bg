@@ -1,0 +1,35 @@
+<a href="javascript:void(0);" class="pull-right dropdown-toggle" data-toggle="dropdown">
+    <span class="caret"></span>
+</a>
+<ul class="dropdown-menu pull-right" role="menu">
+    <li data-ng-hide="file">
+        <a href="javascript:void(0);" data-ng-click="initAddFile(folder)">
+            <span class="glyphicon glyphicon-file"></span>&nbsp;&nbsp;New file
+        </a>
+    </li>
+    <li data-ng-hide="file">
+        <a href="javascript:void(0);" data-ng-click="initAddFolder(folder._id)">
+            <span class="glyphicon glyphicon-folder-close"></span>&nbsp;&nbsp;Add folder
+        </a>
+    </li>
+    <li data-ng-hide="file">
+        <a href="javascript:void(0);" data-ng-click="initEditFolder(folder)">
+            <span class="glyphicon glyphicon-edit"></span>&nbsp;&nbsp;Edit folder
+        </a>
+    </li>
+    <li data-ng-hide="file">
+        <a href="javascript:void(0);" data-ng-click="removeFolder(folder)">
+            <span class="glyphicon glyphicon-remove"></span>&nbsp;&nbsp;Delete folder
+        </a>
+    </li>
+    <li data-ng-show="file">
+        <a href="javascript:void(0);" data-ng-click="initEditFile(file)">
+            <span class="glyphicon glyphicon-edit"></span>&nbsp;&nbsp;Edit file
+        </a>
+    </li>
+    <li data-ng-show="file">
+        <a href="javascript:void(0);" data-ng-click="removeFile(file)">
+            <span class="glyphicon glyphicon-remove"></span>&nbsp;&nbsp;Delete file
+        </a>
+    </li>
+</ul>
