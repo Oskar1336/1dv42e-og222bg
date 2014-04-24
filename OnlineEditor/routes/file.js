@@ -5,7 +5,6 @@ module.exports = function(app, models) {
     var events = require("events");
     var emitter = new events.EventEmitter();
     var S = require("string");
-    var fs = require("fs");
 
     emitter.on("saveNewFileToFolder", function(file, folder, res) {
         models.Folder.findById(folder._id, function(err, folder) {

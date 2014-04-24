@@ -130,6 +130,9 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
                         if (data.folder === $rootScope.selectedProject.rootFolder._id) {
                             $rootScope.selectedProject.rootFolder.files.push(data);
                         } else {
+                            if ($rootScope.folderFiles[data.folder] === "undefined") {
+                                $rootScope.folderFiles[data.folder] = [];
+                            }
                             $rootScope.folderFiles[data.folder].push(data);
                         }
                         $modalInstance.close();
