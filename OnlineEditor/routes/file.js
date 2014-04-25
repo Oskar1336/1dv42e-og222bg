@@ -47,7 +47,7 @@ module.exports = function(app, models) {
         var file = new models.File({
             name: newFile.fileName,
             type: newFile.fileType,
-            content: "",
+            content: "<html><NL><TAB><head><NL><TAB></head><NL><TAB><body><NL><TAB></body><NL></html>",
             folder: folder._id
         });
         file.save(function(err) {

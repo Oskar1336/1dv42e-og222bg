@@ -1,9 +1,11 @@
 
 
-angular.module("OnlineEditor.Editor").controller("CodeCtrl", ["$scope", "$rootScope",
-    function($scope, $rootScope) {
+angular.module("OnlineEditor.Editor").controller("CodeCtrl", ["$scope", "$rootScope", "FileFactory",
+    function($scope, $rootScope, FileFactory) {
         "use strict";
-        $scope.rows = {};
+        $scope.rows = [];
+        
+
     }
 ]);
 

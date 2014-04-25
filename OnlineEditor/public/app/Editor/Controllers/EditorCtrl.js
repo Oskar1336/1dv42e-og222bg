@@ -1,11 +1,14 @@
 
 
-angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$rootScope", "$modal", "$location", "FolderFactory", "AlertFactory", "FileFactory",
-    function($scope, $rootScope, $modal, $location, FolderFactory, AlertFactory, FileFactory) {
+angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$rootScope", "$sce", "$modal", "$location", "FolderFactory", "AlertFactory", "FileFactory",
+    function($scope, $rootScope, $sce, $modal, $location, FolderFactory, AlertFactory, FileFactory) {
         "use strict";
-        $scope.showFolders = {};
         $rootScope.subfolders = {};
         $rootScope.folderFiles = {};
+        $scope.showFolders = {};
+        $scope.openFiles = [];
+        $scope.openFile = {};
+        $scope.rows = {1:""};
 
         $scope.project = $rootScope.selectedProject;
         $rootScope.$watch("selectedProject", function() {
@@ -91,6 +94,34 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
                 loadFiles(folder);
                 $scope.showFolders[folder._id] = true;
             }
+        };
+
+        $scope.toTrusted = function(html) {
+            return $sce.trustAsHtml(html);
+        };
+
+        $scope.loadFile = function(file) {
+            console.log(file);
+            $scope.rows = {};
+            $scope.openFile = file;
+            var rows = file.content.split("<NL>");
+
+            for (var i = 0; i < rows.length; i++) {
+                var rowContent = rows[i].split("<TAB>");
+                var row = "";
+                for (var x = 0; x < rowContent.length-1; x++) {
+
+                }
+                row += rows[i];
+                if (file.type === "html") {
+                    row.replace("<", "&lt;");
+                    row.replace(">", "&gt;");
+                }
+                $scope.rows[i] = $sce.trustAsHtml(row);
+                console.log($scope.rows[i]);
+                console.log(row);
+            }
+
         };
 
         $scope.removeFolder = function(folder) {
