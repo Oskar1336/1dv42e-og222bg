@@ -1,11 +1,27 @@
 <!--  data-ng-controller="CodeCtrl" -->
 <div class="code-wrapper">
-    <div class="row-count">
+    <!-- <div class="row-count">
         <div data-ng-repeat="r in rows">
             {{$index+1}}
         </div>
-    </div>
+    </div> -->
     <div class="code-content">
-        <div data-ng-repeat="row in rows" data-ng-bind-html="row"></div>
+        <table border="0" cellpadding="0" cellspacing="0">
+            <tbody>
+                <tr>
+                    <td>
+                        <div data-ng-repeat="r in rows">
+                            {{$index+1}}
+                        </div>
+                    </td>
+                    <td>
+                        <div data-ng-repeat="row in rows">
+                            <span data-ng-bind-html="row.tabs"></span>
+                            {{row.text}}
+                        </div>
+                    </td>    
+                </tr>
+            </tbody>
+        </table>
     </div>
 </div>

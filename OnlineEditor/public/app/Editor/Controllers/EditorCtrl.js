@@ -101,7 +101,6 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
         };
 
         $scope.loadFile = function(file) {
-            console.log(file);
             $scope.rows = {};
             $scope.openFile = file;
             var rows = file.content.split("<NL>");
@@ -110,16 +109,14 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
                 var rowContent = rows[i].split("<TAB>");
                 var row = "";
                 for (var x = 0; x < rowContent.length-1; x++) {
-
+                    row += "&nbsp;&nbsp;&nbsp;";
                 }
-                row += rows[i];
-                if (file.type === "html") {
-                    row.replace("<", "&lt;");
-                    row.replace(">", "&gt;");
-                }
-                $scope.rows[i] = $sce.trustAsHtml(row);
-                console.log($scope.rows[i]);
-                console.log(row);
+                var text = rowContent[rowContent.length-1];//.replace("<", "&lt;");
+                // var text = temp.replace(">", "&gt;");
+                $scope.rows[i] = {
+                    tabs: $sce.trustAsHtml(row),
+                    text: text
+                };
             }
 
         };

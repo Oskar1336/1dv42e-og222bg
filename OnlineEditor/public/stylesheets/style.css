@@ -94,6 +94,21 @@ a {
     color: #FFF;
 }
 
+.code-content pre {
+    overflow: auto;
+    width: 500px;
+    background-color: #333333;
+    border: none;
+    color: white;
+}
+
+pre span {
+    margin-left: 50px;
+    margin-top: 10px;
+}
+
+
+
 .row-count {
     margin-top: 10px;
     margin-left:5px;
