@@ -8,7 +8,13 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
         $scope.showFolders = {};
         $scope.openFiles = [];
         $scope.openFile = {};
-        $scope.rows = {1:""};
+        $scope.rows = [{
+            tabs: $sce.trustAsHtml(""),
+            text: "",
+            rowLength: 0
+        }];
+        $scope.currentPos = { row: 0, char: 0 };
+
 
         $scope.project = $rootScope.selectedProject;
         $rootScope.$watch("selectedProject", function() {
@@ -24,6 +30,68 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
             $rootScope.selectedProject = $scope.project;
         }).error(function(error) {
             console.log(error);
+        });
+
+        // http://stackoverflow.com/questions/586182/insert-item-into-array-at-a-specific-index
+        $(document).keydown(function(event) {
+            if ((event.which >= 48 && event.which <= 90) && (event.altKey === false && event.ctrlKey === false && event.shiftKey === false)) {
+                // var temp = $scope.rows[$scope.currentPos.row];
+                // 
+                $scope.$apply(function() {
+                    $scope.rows[$scope.currentPos.row].text += String.fromCharCode(event.which);
+                    $scope.rows[$scope.currentPos.row].rowLength++;
+                });
+            }
+
+            // Tab
+            if (event.which === 9) {
+                event.preventDefault();
+            }
+            // Enter
+            if (event.which === 13) {
+                event.preventDefault();
+            }
+            // Backspace
+            if (event.which === 8) {
+                event.preventDefault();
+            }
+            // Left arrow
+            if (event.which === 37) {
+                event.preventDefault();
+                if ($scope.currentPos.char > 0) {
+                    $scope.currentPos.char--;
+                }
+            }
+            // Right arrow
+            if (event.which === 39) {
+                event.preventDefault();
+                if ($scope.currentPos.char < $scope.rows[$scope.currentPos.row].rowLength) {
+                    $scope.currentPos.char++;
+                }
+            }
+            // Up arrow
+            if (event.which === 38) {
+                event.preventDefault();
+                if ($scope.currentPos.row > 0) {
+                    $scope.currentPos.row--;
+                }
+            }
+            // Down arrow
+            if (event.which === 40) {
+                event.preventDefault();
+                if ($scope.currentPos.row < $scope.rows.length-1) {
+                    $scope.currentPos.row++;
+                }
+            }
+            // Home
+            if (event.which === 36) {
+                event.preventDefault();
+            }
+            // End
+            if (event.which === 35) {
+                event.preventDefault();
+            }
+            console.log($scope.currentPos);
         });
 
         var fileExists = function(fileId, folderId) {
@@ -96,29 +164,29 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
             }
         };
 
-        $scope.toTrusted = function(html) {
+        $scope.toTrustHtml = function(html) {
             return $sce.trustAsHtml(html);
         };
 
         $scope.loadFile = function(file) {
-            $scope.rows = {};
+            $scope.rows = [];
             $scope.openFile = file;
-            var rows = file.content.split("<NL>");
 
-            for (var i = 0; i < rows.length; i++) {
-                var rowContent = rows[i].split("<TAB>");
+            for (var i = 0; i < file.content.length; i++) {
+                var rowContent = file.content[i].split("<TAB>");
                 var row = "";
+                var length = "";
                 for (var x = 0; x < rowContent.length-1; x++) {
-                    row += "&nbsp;&nbsp;&nbsp;";
+                    row += "&nbsp;&nbsp;";
+                    length += "  ";
                 }
-                var text = rowContent[rowContent.length-1];//.replace("<", "&lt;");
-                // var text = temp.replace(">", "&gt;");
-                $scope.rows[i] = {
-                    tabs: $sce.trustAsHtml(row),
-                    text: text
-                };
+                length += rowContent[rowContent.length-1];
+                $scope.rows.push({
+                    tabs: row,
+                    text: rowContent[rowContent.length-1],
+                    rowLength: length.length-1
+                });
             }
-
         };
 
         $scope.removeFolder = function(folder) {

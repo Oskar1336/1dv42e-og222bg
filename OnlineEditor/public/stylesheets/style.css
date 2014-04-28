@@ -81,15 +81,14 @@ a {
 .code-wrapper {
     height: 570px;
     overflow: scroll;
-    width: 985px;
+    width: 1000px;
     float:left;
     color: white;
     font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace;
 }
 
 .code-content {
-    padding: 10px;
-    margin-left: 15px;
+    padding: 5px;
     float:left;
     color: #FFF;
 }
@@ -102,23 +101,25 @@ a {
     color: white;
 }
 
-pre span {
-    margin-left: 50px;
-    margin-top: 10px;
+.code {
+    overflow: auto;
+    color: white;
+    background-color: #333333;
+    border: none;
+    margin: 0;
+    width: 940px;
+    height: 534px;
+    float:left;
 }
-
-
 
 .row-count {
-    margin-top: 10px;
+    /*margin-top: 5px;*/
+    margin-right: 5px;
     margin-left:5px;
-    float:left;
     width:23px;
     text-align: center;
+    float:left;
 }
-
-
-
 
 .pointer:hover{
     cursor: pointer;

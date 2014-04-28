@@ -5,7 +5,7 @@ module.exports = function(mongoose) {
     return mongoose.model("File", new Schema({
         name: String,
         type: String,
-        content: String,
+        content: [String],
         folder: { type:Schema.Types.ObjectId, ref: "Folder" }
     }));
 };
