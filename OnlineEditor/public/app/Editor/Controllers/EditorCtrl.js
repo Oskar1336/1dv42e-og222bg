@@ -7,14 +7,12 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
         $rootScope.folderFiles = {};
         $scope.showFolders = {};
         $scope.openFiles = [];
-        $scope.openFile = {};
+        $scope.openFile = null;
         $scope.rows = [{
-            tabs: $sce.trustAsHtml(""),
             text: "",
             rowLength: 0
         }];
         $scope.currentPos = { row: 0, char: 0 };
-
 
         $scope.project = $rootScope.selectedProject;
         $rootScope.$watch("selectedProject", function() {
@@ -32,28 +30,170 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
             console.log(error);
         });
 
-        // http://stackoverflow.com/questions/586182/insert-item-into-array-at-a-specific-index
-        $(document).keydown(function(event) {
-            if ((event.which >= 48 && event.which <= 90) && (event.altKey === false && event.ctrlKey === false && event.shiftKey === false)) {
-                // var temp = $scope.rows[$scope.currentPos.row];
-                // 
-                $scope.$apply(function() {
-                    $scope.rows[$scope.currentPos.row].text += String.fromCharCode(event.which);
-                    $scope.rows[$scope.currentPos.row].rowLength++;
-                });
+        var joinStringArray = function(array) {
+            var string = "";
+            for (var i = 0; i < array.length; i++) {
+                string += array[i];
             }
+            return string;
+        };
 
+        var replaceHtmlCodes = function(string) {
+            string = string.replace(/&nbsp;/g, " ");
+            string = string.replace(/&lt;/g, "<");
+            string = string.replace(/&gt;/g, ">");
+            return string;
+        };
+
+        var convertToHtmlCodes = function(string) {
+            string = string.replace(/ /g, "&nbsp;");
+            string = string.replace(/</g, "&lt;");
+            string = string.replace(/>/g, "&gt;");
+            return string;
+        };
+
+        var pushCharToString = function(char) {
+            var tempString = replaceHtmlCodes($scope.rows[$scope.currentPos.row].text);
+            var charArray = tempString.split("");
+            charArray.splice($scope.currentPos.char, 0, char);
+            $scope.$apply(function() {
+                $scope.rows[$scope.currentPos.row].text = convertToHtmlCodes(joinStringArray(charArray));
+                $scope.rows[$scope.currentPos.row].rowLength++;
+                $scope.currentPos.char++;
+            });
+        };
+
+        $(document).keydown(function(event) {
+            console.log(event);
+            var tempString = "";
+            var charArray = [];
+            if (event.which !== 116 && (event.which >= 48 && event.which <= 226) && event.shiftKey === false && event.ctrlKey === false && event.altKey === false) {
+                event.preventDefault();
+                if (event.which === 187) {
+                    pushCharToString("+");
+                } else if (event.which === 188) {
+                    pushCharToString(",");
+                } else if (event.which === 189) {
+                    pushCharToString("-");
+                } else if (event.which === 190) {
+                    pushCharToString(".");
+                } else if (event.which === 191) {
+                    pushCharToString("'");
+                } else if (event.which === 226) {
+                    pushCharToString("<");
+                } else {
+                    pushCharToString(String.fromCharCode(event.which).toLowerCase());
+                }
+            } else if (event.which !== 116 && (event.which >= 48 && event.which <= 226) && event.shiftKey === true && event.ctrlKey === false && event.altKey === false) {
+                event.preventDefault();
+                if (event.which === 49) {
+                    pushCharToString("!");
+                } else if (event.which === 50) {
+                    pushCharToString("\"");
+                } else if (event.which === 51) {
+                    pushCharToString("#");
+                } else if (event.which === 52) {
+                    pushCharToString("¤");
+                } else if (event.which === 53) {
+                    pushCharToString("%");
+                } else if (event.which === 54) {
+                    pushCharToString("&");
+                } else if (event.which === 55) {
+                    pushCharToString("/");
+                } else if (event.which === 56) {
+                    pushCharToString("(");
+                } else if (event.which === 57) {
+                    pushCharToString(")");
+                } else if (event.which === 48) {
+                    pushCharToString("=");
+                } else if (event.which === 187) {
+                    pushCharToString("?");
+                } else if (event.which === 188) {
+                    pushCharToString(";");
+                } else if (event.which === 189) {
+                    pushCharToString("_");
+                } else if (event.which === 190) {
+                    pushCharToString(":");
+                } else if (event.which === 191) {
+                    pushCharToString("*");
+                } else if (event.which === 226) {
+                    pushCharToString(">");
+                } else {
+                    pushCharToString(String.fromCharCode(event.which));
+                }
+            } else if (event.which !== 116 && (event.which >= 48 && event.which <= 226) && event.shiftKey === false && event.ctrlKey === true && event.altKey === true) {
+                event.preventDefault();
+                if (event.which === 55) {
+                    pushCharToString("{");
+                } else if (event.which === 56) {
+                    pushCharToString("[");
+                } else if (event.which === 57) {
+                    pushCharToString("]");
+                } else if (event.which === 48) {
+                    pushCharToString("}");
+                } else if (event.which === 187) {
+                    pushCharToString("\\");
+                } else if (event.which === 226) {
+                    pushCharToString("|");
+                }
+            }
             // Tab
             if (event.which === 9) {
                 event.preventDefault();
+                tempString = replaceHtmlCodes($scope.rows[$scope.currentPos.row].text);
+                charArray = tempString.split("");
+                for (var i = 0; i < 2; i++) {
+                    charArray.splice($scope.currentPos.char, 0, " ");
+                }
+                $scope.$apply(function() {
+                    $scope.rows[$scope.currentPos.row].text = convertToHtmlCodes(joinStringArray(charArray));
+                    $scope.rows[$scope.currentPos.row].rowLength += 2;
+                    $scope.currentPos.char += 2;
+                });
             }
             // Enter
             if (event.which === 13) {
                 event.preventDefault();
+                $scope.$apply(function() {
+                    $scope.rows.splice($scope.currentPos.row+1, 0, {
+                        text: "",
+                        rowLength: 0
+                    });
+                    $scope.currentPos.row++;
+                    $scope.currentPos.char = 0;
+                });
             }
             // Backspace
             if (event.which === 8) {
                 event.preventDefault();
+                if ($scope.currentPos.char > 0) {
+                    tempString = replaceHtmlCodes($scope.rows[$scope.currentPos.row].text);
+                    charArray = tempString.split("");
+                    charArray.splice($scope.currentPos.char-1, 1);
+                    $scope.$apply(function() {
+                        $scope.rows[$scope.currentPos.row].text = convertToHtmlCodes(joinStringArray(charArray));
+                        $scope.rows[$scope.currentPos.row].rowLength--;
+                        $scope.currentPos.char--;
+                    });
+                } else {
+                    $scope.$apply(function() {
+                        $scope.rows.splice($scope.currentPos.row, 1);
+                        if ($scope.currentPos.row !== 0) {
+                            $scope.currentPos.row--;
+                        }
+                        if ($scope.rows.length === 0) {
+                            $scope.rows.push({
+                                text: "",
+                                rowLength: 0
+                            });
+                        }
+                    });
+                }
+            }
+            // Space
+            if (event.which === 32) {
+                event.preventDefault();
+                pushCharToString(" ");
             }
             // Left arrow
             if (event.which === 37) {
@@ -65,7 +205,7 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
             // Right arrow
             if (event.which === 39) {
                 event.preventDefault();
-                if ($scope.currentPos.char < $scope.rows[$scope.currentPos.row].rowLength) {
+                if ($scope.currentPos.char < $scope.rows[$scope.currentPos.row].rowLength+1) {
                     $scope.currentPos.char++;
                 }
             }
@@ -74,6 +214,9 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
                 event.preventDefault();
                 if ($scope.currentPos.row > 0) {
                     $scope.currentPos.row--;
+                    if ($scope.currentPos.char > $scope.rows[$scope.currentPos.row].text.length-1) {
+                        $scope.currentPos.char = $scope.rows[$scope.currentPos.row].text.length-1;
+                    }
                 }
             }
             // Down arrow
@@ -81,15 +224,20 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
                 event.preventDefault();
                 if ($scope.currentPos.row < $scope.rows.length-1) {
                     $scope.currentPos.row++;
+                    if ($scope.currentPos.char > $scope.rows[$scope.currentPos.row].text.length-1) {
+                        $scope.currentPos.char = $scope.rows[$scope.currentPos.row].text.length-1;
+                    }
                 }
             }
             // Home
             if (event.which === 36) {
                 event.preventDefault();
+                $scope.currentPos.char = 0;
             }
             // End
             if (event.which === 35) {
                 event.preventDefault();
+                $scope.currentPos.char = $scope.rows[$scope.currentPos.row].rowLength+1;
             }
             console.log($scope.currentPos);
         });
@@ -164,28 +312,36 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
             }
         };
 
+        $scope.stringToChars = function(string) {
+            var tempStrig = replaceHtmlCodes(string.text);
+            return tempStrig.split("");
+        };
+
         $scope.toTrustHtml = function(html) {
             return $sce.trustAsHtml(html);
         };
 
         $scope.loadFile = function(file) {
-            $scope.rows = [];
-            $scope.openFile = file;
+            if ($scope.openFile === null || $scope.openFile._id !== file._id) {
+                $scope.rows = [];
+                $scope.openFile = file;
+                $scope.currentPos = { row: 0, char: 0 };
 
-            for (var i = 0; i < file.content.length; i++) {
-                var rowContent = file.content[i].split("<TAB>");
-                var row = "";
-                var length = "";
-                for (var x = 0; x < rowContent.length-1; x++) {
-                    row += "&nbsp;&nbsp;";
-                    length += "  ";
+                for (var i = 0; i < file.content.length; i++) {
+                    var rowContent = file.content[i].split("<TAB>");
+                    var row = "";
+                    var length = 0;
+                    for (var x = 0; x < rowContent.length-1; x++) {
+                        row += "&nbsp;&nbsp;";
+                        length += 2;
+                    }
+                    length += rowContent[rowContent.length-1].length-1;
+                    row += rowContent[rowContent.length-1].replace("<", "&lt;").replace(">", "&gt;");
+                    $scope.rows.push({
+                        text: row,
+                        rowLength: length
+                    });
                 }
-                length += rowContent[rowContent.length-1];
-                $scope.rows.push({
-                    tabs: row,
-                    text: rowContent[rowContent.length-1],
-                    rowLength: length.length-1
-                });
             }
         };
 

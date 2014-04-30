@@ -112,6 +112,31 @@ a {
     float:left;
 }
 
+.code-layer {
+    float:left;
+    position:absolute;
+    z-index: 10000;
+}
+
+.marker-layer {
+    position:absolute;
+    float: left;
+    z-index: 5000;
+}
+
+.marker-layout {
+    width:7px;
+    height: 17px;
+}
+
+.marker {
+    background-color: #FF4000;
+}
+
+.row {
+    height:17px;
+}
+
 .row-count {
     /*margin-top: 5px;*/
     margin-right: 5px;

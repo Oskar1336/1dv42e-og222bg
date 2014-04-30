@@ -1,8 +1,4 @@
-<!--  data-ng-controller="CodeCtrl" -->
 <div class="code-wrapper">
-    <!-- <div class="row-count" data-ng-repeat="r in rowCount">
-        {{$index+1}}
-    </div> -->
     <div class="code-content">
         <table border="0" cellpadding="0" cellspacing="0">
             <tbody>
@@ -13,9 +9,16 @@
                         </div>
                     </td>
                     <td class="code">
-                        <div data-ng-repeat="row in rows" class="row{{$index}}">
-                            <span data-ng-bind-html="toTrustHtml(row.tabs)" class=""></span>
-                            <span data-ng-bind="rows[$index].text"></span>
+                        <div class="code-layer">
+                            <div data-ng-repeat="row in rows" class="row{{$index}}">
+                                <span data-ng-bind-html="toTrustHtml(row.text)"></span>
+                            </div>
+                        </div>
+                        <div class="marker-layer">
+                            <div data-ng-repeat="rw in rows">
+                                <div data-ng-repeat="c in stringToChars(rw) track by $index" class="marker-layout marker">
+                                </div>
+                            </div>
                         </div>
                     </td>    
                 </tr>
