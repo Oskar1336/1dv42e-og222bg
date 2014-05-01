@@ -125,8 +125,9 @@ a {
 }
 
 .marker-layout {
-    width:7px;
+    width:8px;
     height: 17px;
+    float:left;
 }
 
 .marker {
@@ -135,6 +136,7 @@ a {
 
 .row {
     height:17px;
+    margin-left: 5px;
 }
 
 .row-count {

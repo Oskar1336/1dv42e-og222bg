@@ -47,7 +47,7 @@ module.exports = function(app, models) {
         var file = new models.File({
             name: newFile.fileName,
             type: newFile.fileType,
-            content: ["<html>", "<TAB><head>", "<TAB></head>", "<TAB><body>", "<TAB></body>", "</html>"],
+            content: [],
             folder: folder._id
         });
         file.save(function(err) {
@@ -80,10 +80,11 @@ module.exports = function(app, models) {
     app.put("/file/:fileId", authHelpers.checkIfAuthenticated, function(req, res) {
         models.File.findById(req.params.fileId).populate("folder").exec(function(err, file) {
             if (err) {
-
+                res.status(500);
+                res.send({error: err, statusCode: 500});
             } else {
                 if (authHelpers.findProjectAndValidateUser(req.user, file.folder.project, models)) {
-                    if (req.save) {
+                    if (req.body.save) {
                         file.content = req.body.content;
                         file.save(function(err) {
                             if (err) {

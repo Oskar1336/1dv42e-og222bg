@@ -10,14 +10,14 @@
                     </td>
                     <td class="code">
                         <div class="code-layer">
-                            <div data-ng-repeat="row in rows" class="row{{$index}}">
+                            <div data-ng-repeat="row in rows">
                                 <span data-ng-bind-html="toTrustHtml(row.text)"></span>
                             </div>
                         </div>
                         <div class="marker-layer">
                             <div data-ng-repeat="rw in rows">
-                                <div data-ng-repeat="c in stringToChars(rw) track by $index" class="marker-layout marker">
-                                </div>
+                                <div data-ng-repeat="c in stringToChars(rw) track by $index" data-ng-class="{marker: checkMarkerPosition($parent.$index, $index) }" class="marker-layout"></div>
+                                <br>
                             </div>
                         </div>
                     </td>    

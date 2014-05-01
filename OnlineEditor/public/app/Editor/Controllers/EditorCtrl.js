@@ -63,8 +63,21 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
             });
         };
 
+        var replaceHtmlCodesToCustomXML = function(string) {
+            string = string.replace(/&nbsp;&nbsp;/g, "<TAB>");
+            string = string.replace(/&nbsp;/g, "<SPACE>");
+            string = string.replace(/&lt;/g, "<");
+            string = string.replace(/&gt;/g, ">");
+            return string;
+        };
+
+        var convertCustomXMLToHTMLCodes = function(string) {
+            string = string.replace(/<TAB>/g, "&nbsp;&nbsp;");
+            string = string.replace(/<SPACE>/g, "&nbsp;");
+            return string;
+        };
+
         $(document).keydown(function(event) {
-            console.log(event);
             var tempString = "";
             var charArray = [];
             if (event.which !== 116 && (event.which >= 48 && event.which <= 226) && event.shiftKey === false && event.ctrlKey === false && event.altKey === false) {
@@ -136,6 +149,21 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
                 } else if (event.which === 226) {
                     pushCharToString("|");
                 }
+            } else if (event.which === 83 && event.shiftKey === false && event.ctrlKey === true && event.altKey === false) {
+                event.preventDefault();
+                if (typeof $scope.openFile === "object") {
+                    var stringArray = [];
+                    
+                    for (var i = 0; i < $scope.rows.length; i++) {
+                        stringArray.push(replaceHtmlCodesToCustomXML($scope.rows[i].text));
+                    }
+
+                    FileFactory.saveFile(stringArray, $scope.openFile._id).success(function(data) {
+                        console.log(data);
+                    }).error(function(error) {
+                        console.log(error);
+                    });
+                }
             }
             // Tab
             if (event.which === 9) {
@@ -198,48 +226,59 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
             // Left arrow
             if (event.which === 37) {
                 event.preventDefault();
-                if ($scope.currentPos.char > 0) {
-                    $scope.currentPos.char--;
-                }
+                $scope.$apply(function() {
+                    if ($scope.currentPos.char > 0) {
+                        $scope.currentPos.char--;
+                    }
+                });
             }
             // Right arrow
             if (event.which === 39) {
                 event.preventDefault();
-                if ($scope.currentPos.char < $scope.rows[$scope.currentPos.row].rowLength+1) {
-                    $scope.currentPos.char++;
-                }
+                $scope.$apply(function() {
+                    if ($scope.currentPos.char < $scope.rows[$scope.currentPos.row].rowLength+1) {
+                        $scope.currentPos.char++;
+                    }
+                });
             }
             // Up arrow
             if (event.which === 38) {
                 event.preventDefault();
-                if ($scope.currentPos.row > 0) {
-                    $scope.currentPos.row--;
-                    if ($scope.currentPos.char > $scope.rows[$scope.currentPos.row].text.length-1) {
-                        $scope.currentPos.char = $scope.rows[$scope.currentPos.row].text.length-1;
+                $scope.$apply(function() {
+                    if ($scope.currentPos.row > 0) {
+                        $scope.currentPos.row--;
+                        if ($scope.currentPos.char > $scope.rows[$scope.currentPos.row].text.length-1) {
+                            $scope.currentPos.char = $scope.rows[$scope.currentPos.row].text.length-1;
+                        }
                     }
-                }
+                });
             }
             // Down arrow
             if (event.which === 40) {
                 event.preventDefault();
-                if ($scope.currentPos.row < $scope.rows.length-1) {
-                    $scope.currentPos.row++;
-                    if ($scope.currentPos.char > $scope.rows[$scope.currentPos.row].text.length-1) {
-                        $scope.currentPos.char = $scope.rows[$scope.currentPos.row].text.length-1;
+                $scope.$apply(function() {
+                    if ($scope.currentPos.row < $scope.rows.length-1) {
+                        $scope.currentPos.row++;
+                        if ($scope.currentPos.char > $scope.rows[$scope.currentPos.row].text.length-1) {
+                            $scope.currentPos.char = $scope.rows[$scope.currentPos.row].text.length-1;
+                        }
                     }
-                }
+                });
             }
             // Home
             if (event.which === 36) {
                 event.preventDefault();
-                $scope.currentPos.char = 0;
+                $scope.$apply(function() {
+                    $scope.currentPos.char = 0;
+                });
             }
             // End
             if (event.which === 35) {
                 event.preventDefault();
-                $scope.currentPos.char = $scope.rows[$scope.currentPos.row].rowLength+1;
+                $scope.$apply(function() {
+                    $scope.currentPos.char = $scope.rows[$scope.currentPos.row].rowLength+1;
+                });
             }
-            console.log($scope.currentPos);
         });
 
         var fileExists = function(fileId, folderId) {
@@ -314,7 +353,16 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
 
         $scope.stringToChars = function(string) {
             var tempStrig = replaceHtmlCodes(string.text);
-            return tempStrig.split("");
+            var t = tempStrig.split("");
+            t.push("");
+            return t;
+        };
+
+        $scope.checkMarkerPosition = function(parentIndex, index) {
+            if ($scope.currentPos.row === parentIndex && $scope.currentPos.char === index) {
+                return true;
+            }
+            return false;
         };
 
         $scope.toTrustHtml = function(html) {
@@ -328,18 +376,10 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
                 $scope.currentPos = { row: 0, char: 0 };
 
                 for (var i = 0; i < file.content.length; i++) {
-                    var rowContent = file.content[i].split("<TAB>");
-                    var row = "";
-                    var length = 0;
-                    for (var x = 0; x < rowContent.length-1; x++) {
-                        row += "&nbsp;&nbsp;";
-                        length += 2;
-                    }
-                    length += rowContent[rowContent.length-1].length-1;
-                    row += rowContent[rowContent.length-1].replace("<", "&lt;").replace(">", "&gt;");
+                    var row = convertCustomXMLToHTMLCodes(file.content[i]);
                     $scope.rows.push({
                         text: row,
-                        rowLength: length
+                        rowLength: replaceHtmlCodes(row).length-1
                     });
                 }
             }
@@ -362,6 +402,9 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
         };
 
         $scope.removeFile = function(file) {
+            if ($scope.openFile._id === file._id) {
+                $scope.openFile = {};
+            }
             var parentId = "";
             if (typeof file.folder === "object") {
                 parentId = file.folder._id;
