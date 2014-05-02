@@ -47,7 +47,7 @@ a {
 }
 
 .top-menu {
-    width: 100%;
+    width: 300px;
     height: 30px;
     background-color: #f8f8f8;
     padding: 5px;
@@ -88,20 +88,31 @@ a {
 }
 
 .open-files {
-    height: 24px;
-    background-color:green;
-    border-bottom: 2px solid yellow;
+    height: 30px;
+    background-color:#f8f8f8;
+    border-bottom: 2px solid #cacaca;
 }
 
 .open-file {
-    height: 22px;
+    line-height: 22px;
+    height: 28px;
     padding-left: 5px;
-    width:100px;
-    background-color: black;
+    padding-top: 2px;
+    padding-right: 5px;
+    width:150px;
+    background-color: #d4d4d4;
     margin-right: 2px;
     float:left;
     overflow: hidden;
 }
+
+    .open-file .selected {
+        background-color: #ffffff;
+    }
+
+    .open-file .glyphicon-remove {
+        line-height: 22px;
+    }
 
 .code-content {
     padding: 5px;
@@ -109,16 +120,7 @@ a {
     color: #FFF;
 }
 
-.code-content pre {
-    overflow: auto;
-    width: 500px;
-    background-color: #333333;
-    border: none;
-    color: white;
-}
-
 .code {
-    overflow: auto;
     color: white;
     background-color: #333333;
     border: none;
@@ -131,13 +133,13 @@ a {
 .code-layer {
     float:left;
     position:absolute;
-    z-index: 10000;
+    /*z-index: 10000;*/
 }
 
 .marker-layer {
     position:absolute;
     float: left;
-    z-index: 5000;
+    /*z-index: 5000;*/
 }
 
 .marker-layout {

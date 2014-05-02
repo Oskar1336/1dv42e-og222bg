@@ -92,16 +92,6 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
             return convertToHtmlCodes(string);
         };
 
-        var searchForFile = function(array, file) {
-            var foundFile = false;
-            for (var i = 0; i < $scope.openFiles.length; i++) {
-                if ($scope.openFiles[i]._id === file._id) {
-                    foundFile = true;
-                }
-            }
-            return foundFile;
-        };
-
         var bindKeydown = function() {
             $(document).bind("keydown", function(event) {
                 var tempString = "";
@@ -411,7 +401,7 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
             }
             file = openedFiles[file._id];
             
-            if (!searchForFile($scope.openFiles, file)) {
+            if ($scope.openFiles.indexOf(file) === -1) {
                 $scope.openFiles.push(file);
             }
 
@@ -437,13 +427,18 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
         };
 
         $scope.closeFile = function(file) {
-            $scope.openFiles.splice($scope.openFiles.indexOf(file), 1);
+            var fileIndex = $scope.openFiles.indexOf(file);
+            $scope.openFiles.splice(fileIndex, 1);
             if (file._id === $scope.openFile._id) {
-                $scope.openFile = {};
-                $scope.rows = [{
-                    text: "",
-                    rowLength: 0
-                }];
+                if (fileIndex !== 0) {
+                    $scope.loadFile($scope.openFiles[fileIndex-1]);
+                } else {
+                    $scope.openFile = {};
+                    $scope.rows = [{
+                        text: "",
+                        rowLength: 0
+                    }];
+                }
             }
         };
 

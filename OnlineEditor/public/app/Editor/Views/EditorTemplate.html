@@ -11,6 +11,12 @@
             </div>
             <a href="javascript:void(0);" class="editor-menu-item" data-ng-click="options()">Options</a>
         </div>
+        <div class="open-files">
+            <div data-ng-repeat="file in openFiles" class="open-file" data-ng-click="loadFile(file)">
+                <span data-ng-bind-html="toTrustHtml(file.name)"></span>
+                <span class="pull-right glyphicon glyphicon-remove" data-ng-click="closeFile(file)"></span>
+            </div>
+        </div>
 
         <div class="left-side-bar">
             <ul class="list-group">
