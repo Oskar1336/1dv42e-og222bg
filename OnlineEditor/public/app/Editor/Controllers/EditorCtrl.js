@@ -8,11 +8,26 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
         $scope.showFolders = {};
         $scope.openFiles = [];
         $scope.openFile = null;
+        var openedFiles = {};
         $scope.rows = [{
             text: "",
             rowLength: 0
         }];
         $scope.currentPos = { row: 0, char: 0 };
+        var showMarker = true;
+
+        // interval to show and hide marker.
+        window.setInterval(function() {
+            if (showMarker) {
+                $scope.$apply(function() {
+                    showMarker = false;
+                });
+            } else {
+                $scope.$apply(function() {
+                    showMarker = true;
+                });
+            }
+        }, 600);
 
         $scope.project = $rootScope.selectedProject;
         $rootScope.$watch("selectedProject", function() {
@@ -74,212 +89,233 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
         var convertCustomXMLToHTMLCodes = function(string) {
             string = string.replace(/<TAB>/g, "&nbsp;&nbsp;");
             string = string.replace(/<SPACE>/g, "&nbsp;");
-            return string;
+            return convertToHtmlCodes(string);
         };
 
-        $(document).keydown(function(event) {
-            var tempString = "";
-            var charArray = [];
-            if (event.which !== 116 && (event.which >= 48 && event.which <= 226) && event.shiftKey === false && event.ctrlKey === false && event.altKey === false) {
-                event.preventDefault();
-                if (event.which === 187) {
-                    pushCharToString("+");
-                } else if (event.which === 188) {
-                    pushCharToString(",");
-                } else if (event.which === 189) {
-                    pushCharToString("-");
-                } else if (event.which === 190) {
-                    pushCharToString(".");
-                } else if (event.which === 191) {
-                    pushCharToString("'");
-                } else if (event.which === 226) {
-                    pushCharToString("<");
-                } else {
-                    pushCharToString(String.fromCharCode(event.which).toLowerCase());
+        var searchForFile = function(array, file) {
+            var foundFile = false;
+            for (var i = 0; i < $scope.openFiles.length; i++) {
+                if ($scope.openFiles[i]._id === file._id) {
+                    foundFile = true;
                 }
-            } else if (event.which !== 116 && (event.which >= 48 && event.which <= 226) && event.shiftKey === true && event.ctrlKey === false && event.altKey === false) {
-                event.preventDefault();
-                if (event.which === 49) {
-                    pushCharToString("!");
-                } else if (event.which === 50) {
-                    pushCharToString("\"");
-                } else if (event.which === 51) {
-                    pushCharToString("#");
-                } else if (event.which === 52) {
-                    pushCharToString("¤");
-                } else if (event.which === 53) {
-                    pushCharToString("%");
-                } else if (event.which === 54) {
-                    pushCharToString("&");
-                } else if (event.which === 55) {
-                    pushCharToString("/");
-                } else if (event.which === 56) {
-                    pushCharToString("(");
-                } else if (event.which === 57) {
-                    pushCharToString(")");
-                } else if (event.which === 48) {
-                    pushCharToString("=");
-                } else if (event.which === 187) {
-                    pushCharToString("?");
-                } else if (event.which === 188) {
-                    pushCharToString(";");
-                } else if (event.which === 189) {
-                    pushCharToString("_");
-                } else if (event.which === 190) {
-                    pushCharToString(":");
-                } else if (event.which === 191) {
-                    pushCharToString("*");
-                } else if (event.which === 226) {
-                    pushCharToString(">");
-                } else {
-                    pushCharToString(String.fromCharCode(event.which));
-                }
-            } else if (event.which !== 116 && (event.which >= 48 && event.which <= 226) && event.shiftKey === false && event.ctrlKey === true && event.altKey === true) {
-                event.preventDefault();
-                if (event.which === 55) {
-                    pushCharToString("{");
-                } else if (event.which === 56) {
-                    pushCharToString("[");
-                } else if (event.which === 57) {
-                    pushCharToString("]");
-                } else if (event.which === 48) {
-                    pushCharToString("}");
-                } else if (event.which === 187) {
-                    pushCharToString("\\");
-                } else if (event.which === 226) {
-                    pushCharToString("|");
-                }
-            } else if (event.which === 83 && event.shiftKey === false && event.ctrlKey === true && event.altKey === false) {
-                event.preventDefault();
-                if (typeof $scope.openFile === "object") {
-                    var stringArray = [];
-                    
-                    for (var i = 0; i < $scope.rows.length; i++) {
-                        stringArray.push(replaceHtmlCodesToCustomXML($scope.rows[i].text));
-                    }
+            }
+            return foundFile;
+        };
 
-                    FileFactory.saveFile(stringArray, $scope.openFile._id).success(function(data) {
-                        console.log(data);
-                    }).error(function(error) {
-                        console.log(error);
-                    });
-                }
-            }
-            // Tab
-            if (event.which === 9) {
-                event.preventDefault();
-                tempString = replaceHtmlCodes($scope.rows[$scope.currentPos.row].text);
-                charArray = tempString.split("");
-                for (var i = 0; i < 2; i++) {
-                    charArray.splice($scope.currentPos.char, 0, " ");
-                }
+        var bindKeydown = function() {
+            $(document).bind("keydown", function(event) {
+                var tempString = "";
+                var charArray = [];
                 $scope.$apply(function() {
-                    $scope.rows[$scope.currentPos.row].text = convertToHtmlCodes(joinStringArray(charArray));
-                    $scope.rows[$scope.currentPos.row].rowLength += 2;
-                    $scope.currentPos.char += 2;
+                    showMarker = true;
                 });
-            }
-            // Enter
-            if (event.which === 13) {
-                event.preventDefault();
-                $scope.$apply(function() {
-                    $scope.rows.splice($scope.currentPos.row+1, 0, {
-                        text: "",
-                        rowLength: 0
-                    });
-                    $scope.currentPos.row++;
-                    $scope.currentPos.char = 0;
-                });
-            }
-            // Backspace
-            if (event.which === 8) {
-                event.preventDefault();
-                if ($scope.currentPos.char > 0) {
+
+                if (event.which !== 116 && (event.which >= 48 && event.which <= 226) && event.shiftKey === false && event.ctrlKey === false && event.altKey === false) {
+                    event.preventDefault();
+                    if (event.which === 187) {
+                        pushCharToString("+");
+                    } else if (event.which === 188) {
+                        pushCharToString(",");
+                    } else if (event.which === 189) {
+                        pushCharToString("-");
+                    } else if (event.which === 190) {
+                        pushCharToString(".");
+                    } else if (event.which === 191) {
+                        pushCharToString("'");
+                    } else if (event.which === 226) {
+                        pushCharToString("<");
+                    } else {
+                        pushCharToString(String.fromCharCode(event.which).toLowerCase());
+                    }
+                } else if (event.which !== 116 && (event.which >= 48 && event.which <= 226) && event.shiftKey === true && event.ctrlKey === false && event.altKey === false) {
+                    event.preventDefault();
+                    if (event.which === 49) {
+                        pushCharToString("!");
+                    } else if (event.which === 50) {
+                        pushCharToString("\"");
+                    } else if (event.which === 51) {
+                        pushCharToString("#");
+                    } else if (event.which === 52) {
+                        pushCharToString("¤");
+                    } else if (event.which === 53) {
+                        pushCharToString("%");
+                    } else if (event.which === 54) {
+                        pushCharToString("&");
+                    } else if (event.which === 55) {
+                        pushCharToString("/");
+                    } else if (event.which === 56) {
+                        pushCharToString("(");
+                    } else if (event.which === 57) {
+                        pushCharToString(")");
+                    } else if (event.which === 48) {
+                        pushCharToString("=");
+                    } else if (event.which === 187) {
+                        pushCharToString("?");
+                    } else if (event.which === 188) {
+                        pushCharToString(";");
+                    } else if (event.which === 189) {
+                        pushCharToString("_");
+                    } else if (event.which === 190) {
+                        pushCharToString(":");
+                    } else if (event.which === 191) {
+                        pushCharToString("*");
+                    } else if (event.which === 226) {
+                        pushCharToString(">");
+                    } else {
+                        pushCharToString(String.fromCharCode(event.which));
+                    }
+                } else if (event.which !== 116 && (event.which >= 48 && event.which <= 226) && event.shiftKey === false && event.ctrlKey === true && event.altKey === true) {
+                    event.preventDefault();
+                    if (event.which === 55) {
+                        pushCharToString("{");
+                    } else if (event.which === 56) {
+                        pushCharToString("[");
+                    } else if (event.which === 57) {
+                        pushCharToString("]");
+                    } else if (event.which === 48) {
+                        pushCharToString("}");
+                    } else if (event.which === 187) {
+                        pushCharToString("\\");
+                    } else if (event.which === 226) {
+                        pushCharToString("|");
+                    }
+                } else if (event.which === 83 && event.shiftKey === false && event.ctrlKey === true && event.altKey === false) {
+                    // Ctrl+s Save current file
+                    event.preventDefault();
+                    if ($scope.openFile !== null) {
+                        var stringArray = [];
+                        
+                        for (var i = 0; i < $scope.rows.length; i++) {
+                            stringArray.push(replaceHtmlCodesToCustomXML($scope.rows[i].text));
+                        }
+
+                        FileFactory.saveFile(stringArray, $scope.openFile._id).success(function(data) {
+                            openedFiles[data._id] = data;
+                            console.log(data);
+                        }).error(function(error) {
+                            console.log(error);
+                        });
+                    } else {
+                        console.log("Show new file window with a chance to select were to save it");
+                    }
+                }
+                // Tab
+                if (event.which === 9) {
+                    event.preventDefault();
                     tempString = replaceHtmlCodes($scope.rows[$scope.currentPos.row].text);
                     charArray = tempString.split("");
-                    charArray.splice($scope.currentPos.char-1, 1);
+                    for (var t = 0; t < 2; t++) {
+                        charArray.splice($scope.currentPos.char, 0, " ");
+                    }
                     $scope.$apply(function() {
                         $scope.rows[$scope.currentPos.row].text = convertToHtmlCodes(joinStringArray(charArray));
-                        $scope.rows[$scope.currentPos.row].rowLength--;
-                        $scope.currentPos.char--;
+                        $scope.rows[$scope.currentPos.row].rowLength += 2;
+                        $scope.currentPos.char += 2;
                     });
-                } else {
+                }
+                // Enter
+                if (event.which === 13) {
+                    event.preventDefault();
                     $scope.$apply(function() {
-                        $scope.rows.splice($scope.currentPos.row, 1);
-                        if ($scope.currentPos.row !== 0) {
-                            $scope.currentPos.row--;
-                        }
-                        if ($scope.rows.length === 0) {
-                            $scope.rows.push({
-                                text: "",
-                                rowLength: 0
-                            });
+                        $scope.rows.splice($scope.currentPos.row+1, 0, {
+                            text: "",
+                            rowLength: 0
+                        });
+                        $scope.currentPos.row++;
+                        $scope.currentPos.char = 0;
+                    });
+                }
+                // Backspace
+                if (event.which === 8) {
+                    event.preventDefault();
+                    if ($scope.currentPos.char > 0) {
+                        tempString = replaceHtmlCodes($scope.rows[$scope.currentPos.row].text);
+                        charArray = tempString.split("");
+                        charArray.splice($scope.currentPos.char-1, 1);
+                        $scope.$apply(function() {
+                            $scope.rows[$scope.currentPos.row].text = convertToHtmlCodes(joinStringArray(charArray));
+                            $scope.rows[$scope.currentPos.row].rowLength--;
+                            $scope.currentPos.char--;
+                        });
+                    } else {
+                        $scope.$apply(function() {
+                            $scope.rows.splice($scope.currentPos.row, 1);
+                            if ($scope.currentPos.row !== 0) {
+                                $scope.currentPos.row--;
+                            }
+                            if ($scope.rows.length === 0) {
+                                $scope.rows.push({
+                                    text: "",
+                                    rowLength: 0
+                                });
+                            }
+                        });
+                    }
+                }
+                // Space
+                if (event.which === 32) {
+                    event.preventDefault();
+                    pushCharToString(" ");
+                }
+                // Left arrow
+                if (event.which === 37) {
+                    event.preventDefault();
+                    $scope.$apply(function() {
+                        if ($scope.currentPos.char > 0) {
+                            $scope.currentPos.char--;
                         }
                     });
                 }
-            }
-            // Space
-            if (event.which === 32) {
-                event.preventDefault();
-                pushCharToString(" ");
-            }
-            // Left arrow
-            if (event.which === 37) {
-                event.preventDefault();
-                $scope.$apply(function() {
-                    if ($scope.currentPos.char > 0) {
-                        $scope.currentPos.char--;
-                    }
-                });
-            }
-            // Right arrow
-            if (event.which === 39) {
-                event.preventDefault();
-                $scope.$apply(function() {
-                    if ($scope.currentPos.char < $scope.rows[$scope.currentPos.row].rowLength+1) {
-                        $scope.currentPos.char++;
-                    }
-                });
-            }
-            // Up arrow
-            if (event.which === 38) {
-                event.preventDefault();
-                $scope.$apply(function() {
-                    if ($scope.currentPos.row > 0) {
-                        $scope.currentPos.row--;
-                        if ($scope.currentPos.char > $scope.rows[$scope.currentPos.row].text.length-1) {
-                            $scope.currentPos.char = $scope.rows[$scope.currentPos.row].text.length-1;
+                // Right arrow
+                if (event.which === 39) {
+                    event.preventDefault();
+                    $scope.$apply(function() {
+                        if ($scope.currentPos.char < $scope.rows[$scope.currentPos.row].rowLength+1) {
+                            $scope.currentPos.char++;
                         }
-                    }
-                });
-            }
-            // Down arrow
-            if (event.which === 40) {
-                event.preventDefault();
-                $scope.$apply(function() {
-                    if ($scope.currentPos.row < $scope.rows.length-1) {
-                        $scope.currentPos.row++;
-                        if ($scope.currentPos.char > $scope.rows[$scope.currentPos.row].text.length-1) {
-                            $scope.currentPos.char = $scope.rows[$scope.currentPos.row].text.length-1;
+                    });
+                }
+                // Up arrow
+                if (event.which === 38) {
+                    event.preventDefault();
+                    $scope.$apply(function() {
+                        if ($scope.currentPos.row > 0) {
+                            $scope.currentPos.row--;
+                            if ($scope.currentPos.char > $scope.rows[$scope.currentPos.row].text.length-1) {
+                                $scope.currentPos.char = $scope.rows[$scope.currentPos.row].text.length-1;
+                            }
                         }
-                    }
-                });
-            }
-            // Home
-            if (event.which === 36) {
-                event.preventDefault();
-                $scope.$apply(function() {
-                    $scope.currentPos.char = 0;
-                });
-            }
-            // End
-            if (event.which === 35) {
-                event.preventDefault();
-                $scope.$apply(function() {
-                    $scope.currentPos.char = $scope.rows[$scope.currentPos.row].rowLength+1;
-                });
-            }
-        });
+                    });
+                }
+                // Down arrow
+                if (event.which === 40) {
+                    event.preventDefault();
+                    $scope.$apply(function() {
+                        if ($scope.currentPos.row < $scope.rows.length-1) {
+                            $scope.currentPos.row++;
+                            if ($scope.currentPos.char > $scope.rows[$scope.currentPos.row].text.length-1) {
+                                $scope.currentPos.char = $scope.rows[$scope.currentPos.row].text.length-1;
+                            }
+                        }
+                    });
+                }
+                // Home
+                if (event.which === 36) {
+                    event.preventDefault();
+                    $scope.$apply(function() {
+                        $scope.currentPos.char = 0;
+                    });
+                }
+                // End
+                if (event.which === 35) {
+                    event.preventDefault();
+                    $scope.$apply(function() {
+                        $scope.currentPos.char = $scope.rows[$scope.currentPos.row].rowLength+1;
+                    });
+                }
+            });
+        };
+        bindKeydown();
 
         var fileExists = function(fileId, folderId) {
             for (var i = 0; i < $rootScope.folderFiles[folderId].length; i++) {
@@ -359,7 +395,7 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
         };
 
         $scope.checkMarkerPosition = function(parentIndex, index) {
-            if ($scope.currentPos.row === parentIndex && $scope.currentPos.char === index) {
+            if ($scope.currentPos.row === parentIndex && $scope.currentPos.char === index && showMarker) {
                 return true;
             }
             return false;
@@ -370,18 +406,44 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
         };
 
         $scope.loadFile = function(file) {
+            if (typeof openedFiles[file._id] === "undefined") {
+                openedFiles[file._id] = file;
+            }
+            file = openedFiles[file._id];
+            
+            if (!searchForFile($scope.openFiles, file)) {
+                $scope.openFiles.push(file);
+            }
+
             if ($scope.openFile === null || $scope.openFile._id !== file._id) {
                 $scope.rows = [];
                 $scope.openFile = file;
                 $scope.currentPos = { row: 0, char: 0 };
-
-                for (var i = 0; i < file.content.length; i++) {
-                    var row = convertCustomXMLToHTMLCodes(file.content[i]);
+                if (file.content.length === 0) {
                     $scope.rows.push({
-                        text: row,
-                        rowLength: replaceHtmlCodes(row).length-1
+                        text: "",
+                        rowLength: 1
                     });
+                } else {
+                    for (var i = 0; i < file.content.length; i++) {
+                        var row = convertCustomXMLToHTMLCodes(file.content[i]);
+                        $scope.rows.push({
+                            text: row,
+                            rowLength: replaceHtmlCodes(row).length-1
+                        });
+                    }
                 }
+            }
+        };
+
+        $scope.closeFile = function(file) {
+            $scope.openFiles.splice($scope.openFiles.indexOf(file), 1);
+            if (file._id === $scope.openFile._id) {
+                $scope.openFile = {};
+                $scope.rows = [{
+                    text: "",
+                    rowLength: 0
+                }];
             }
         };
 
@@ -428,6 +490,7 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
         };
 
         $scope.initEditFile = function(file) {
+            $(document).unbind("keydown");
             var modalInstance = $modal.open({
                 templateUrl: "app/Editor/Views/CreateItemTemplate.html",
                 controller: EditFileCtrl,
@@ -436,6 +499,11 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
                         return file;
                     }
                 }
+            });
+            modalInstance.result.then(function() {
+                bindKeydown();
+            }, function() {
+                bindKeydown();
             });
         };
 
@@ -495,6 +563,7 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
         };
 
         $scope.initAddFile = function(folder) {
+            $(document).unbind("keydown");
             var modalInstance = $modal.open({
                 templateUrl: "app/Editor/Views/CreateItemTemplate.html",
                 controller: AddFileCtrl,
@@ -503,6 +572,11 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
                         return folder;
                     }
                 }
+            });
+            modalInstance.result.then(function() {
+                bindKeydown();
+            }, function() {
+                bindKeydown();
             });
         };
 
@@ -561,6 +635,7 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
         };
 
         $scope.initEditFolder = function(folder) {
+            $(document).unbind("keydown");
             var modalInstance = $modal.open({
                 templateUrl: "app/Editor/Views/CreateItemTemplate.html",
                 controller: EditFolderCtrl,
@@ -569,6 +644,11 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
                         return folder;
                     }
                 }
+            });
+            modalInstance.result.then(function() {
+                bindKeydown();
+            }, function() {
+                bindKeydown();
             });
         };
 
@@ -607,6 +687,7 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
         };
 
         $scope.initAddFolder = function(parentId) {
+            $(document).unbind("keydown");
             var modalInstance = $modal.open({
                 templateUrl: "app/Editor/Views/CreateItemTemplate.html",
                 controller: CreateFolderInstanceCtrl,
@@ -622,6 +703,11 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
                         return $scope.project;
                     }
                 }
+            });
+            modalInstance.result.then(function() {
+                bindKeydown();
+            }, function() {
+                bindKeydown();
             });
         };
 

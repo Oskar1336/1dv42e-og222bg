@@ -1,4 +1,10 @@
 <div class="code-wrapper">
+    <div class="open-files">
+        <div data-ng-repeat="file in openFiles" class="open-file" data-ng-click="loadFile(file)">
+            <span data-ng-bind-html="toTrustHtml(file.name)"></span>
+            <span class="pull-right glyphicon glyphicon-remove" data-ng-click="closeFile(file)"></span>
+        </div>
+    </div>
     <div class="code-content">
         <table border="0" cellpadding="0" cellspacing="0">
             <tbody>
@@ -12,6 +18,7 @@
                         <div class="code-layer">
                             <div data-ng-repeat="row in rows">
                                 <span data-ng-bind-html="toTrustHtml(row.text)"></span>
+                                &nbsp;
                             </div>
                         </div>
                         <div class="marker-layer">

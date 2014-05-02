@@ -87,6 +87,22 @@ a {
     font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace;
 }
 
+.open-files {
+    height: 24px;
+    background-color:green;
+    border-bottom: 2px solid yellow;
+}
+
+.open-file {
+    height: 22px;
+    padding-left: 5px;
+    width:100px;
+    background-color: black;
+    margin-right: 2px;
+    float:left;
+    overflow: hidden;
+}
+
 .code-content {
     padding: 5px;
     float:left;
@@ -135,8 +151,7 @@ a {
 }
 
 .row {
-    height:17px;
-    margin-left: 5px;
+    cursor: text;
 }
 
 .row-count {
