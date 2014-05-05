@@ -5,6 +5,7 @@ module.exports = function(app, models) {
     var events = require("events");
     var emitter = new events.EventEmitter();
     var S = require("string");
+    var fs = require("fs");
 
     app.get("/file/:fileId", authHelpers.checkIfAuthenticated, function(req, res) {
         models.File.findById(req.params.fileId).populate("folder").exec(function(err, file) {
@@ -47,8 +48,8 @@ module.exports = function(app, models) {
         var file = new models.File({
             name: newFile.fileName,
             type: newFile.fileType,
-            content: [],
-            folder: folder._id
+            folder: folder._id,
+            content: []
         });
         file.save(function(err) {
             if (err) {
@@ -66,8 +67,7 @@ module.exports = function(app, models) {
                 res.status(500);
                 res.send({error: err, statusCode: 500});
             } else {
-                if (authHelpers.checkIfUserIsAuthorized(req.user, folder.project.users) &&
-                    validateFile(req.body)) {
+                if (authHelpers.checkIfUserIsAuthorized(req.user, folder.project.users) && validateFile(req.body)) {
                     emitter.emit("createFile", folder, req.body, res);
                 } else {
                     res.status(403);

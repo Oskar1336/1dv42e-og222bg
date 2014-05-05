@@ -9,24 +9,39 @@ module.exports = function(models) {
     var oauthCreds = require("../models/oauthCreds");
 
     var findOrCreateUser = function(profile, accesstoken, callback) {
-        models.User.find({ username: profile.username }, function(err, result) {
-            if (result.length <= 0) {
-                models.User.create({
-                    username: profile.username,
-                    githubId: profile.id,
-                    accessToken: accesstoken,
-                    name: profile.displayName,
-                    email: profile._json.email
-                }, function(err, result) {
-                    if (err) {
-                        callback(err, err ? null : result[0]);
-                    } else {
-                        callback(null, result[0]);
-                    }
-                });
+        models.User.find({ username: profile.username }, function(findErr, users) {
+            if (findErr) {
+                callback(findErr, null);
             } else {
-                // @TODO: update access token in database.
-                callback(err, err ? null : result[0]);
+                if (users.length === 0) {
+                    models.User.create({
+                        username: profile.username,
+                        githubId: profile.id,
+                        accessToken: accesstoken,
+                        name: profile.displayName,
+                        email: profile._json.email
+                    }, function(createErr, newUser) {
+                        if (createErr) {
+                            callback(createErr, null);
+                        } else {
+                            callback(null, newUser);
+                        }
+                    });
+                } else if (users.length === 1) {
+                    users[0].accessToken = accesstoken;
+                    users[0].email = profile._json.email;
+                    users[0].name = profile.displayName;
+                    users[0].username = profile.username;
+                    users[0].save(function(saveErr) {
+                        if (saveErr) {
+                            callback(saveErr, null);
+                        } else {
+                            callback(null, users[0]);
+                        }
+                    });
+                } else {
+                    console.log("Major user error!! Row 33");
+                }
             }
         });
     };
@@ -47,7 +62,11 @@ module.exports = function(models) {
         function(accessToken, refreshToken, profile, done) {
             process.nextTick(function() {
                 findOrCreateUser(profile, accessToken, function(err, data) {
-                    return done(null, data);
+                    if (err) {
+                        console.log(err);
+                    } else {
+                        return done(null, data);
+                    }
                 });
             });
         }

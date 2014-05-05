@@ -2,6 +2,7 @@
 
 module.exports = function(app, models, S) {
     var authHelpers = require("../models/authHelperFunctions");
+    var request = require("request");
     var events = require("events");
     var emitter = new events.EventEmitter();
 
@@ -78,15 +79,46 @@ module.exports = function(app, models, S) {
                 });
             }
         });
-        
+    });
+
+    emitter.on("commitRootFolder", function(rootFolder, githubProject, user) {
+
+    });
+
+
+    // https://www.npmjs.org/package/github-api
+    emitter.on("createProjectOnGitHub", function(project, reqBody, rootFolder, user) {
+        request({
+            url: "https://api.github.com/user/repos",
+            method: "POST",
+            headers: {
+                "User-Agent": "1dv42e-og222bg",
+                "Authorization": "token " + user.accessToken
+            },
+            json: {
+                name: project.projectName,
+                description: reqBody.description,
+                private: reqBody.private,
+                homepage: reqBody.homepage,
+                auto_init: true
+            }
+        }, function(err, res, body) {
+            if (err) {
+                console.log("--------------------------Error row 104--------------------------");
+                console.log(err);
+            } else {
+                project.htmlLink = body.html_url;
+                project.save();
+            }
+        });
     });
 
     // Event for creating new project.
-    emitter.on("createProject", function(rootFolder, newProjectInfo, user, res) {
+    emitter.on("createProject", function(rootFolder, newProjectInfo, res, req) {
         var newProject = new models.Project({
             projectName: newProjectInfo.projectName,
-            owner: user._id,
-            users: [ user._id ],
+            owner: req.user._id,
+            users: [ req.user._id ],
             rootFolder: rootFolder._id
         });
         newProject.save(function(err) {
@@ -94,7 +126,10 @@ module.exports = function(app, models, S) {
                 res.status(500);
                 res.send({error: err, statusCode: 500});
             } else {
-                emitter.emit("addProjectToUser", rootFolder, newProject, user._id, res);
+                if (req.body.saveToGithub) {
+                    emitter.emit("createProjectOnGitHub", newProject, req.body, rootFolder, req.user);
+                }
+                emitter.emit("addProjectToUser", rootFolder, newProject, req.user._id, res);
             }
         });
     });
@@ -113,7 +148,7 @@ module.exports = function(app, models, S) {
                     res.status(500);
                     res.send({error: err, statusCode: 500});
                 } else {
-                    emitter.emit("createProject", rootFolder, req.body, req.user, res);
+                    emitter.emit("createProject", rootFolder, req.body, res, req);
                 }
             });
         } else {
@@ -122,7 +157,6 @@ module.exports = function(app, models, S) {
         }
     });
 
-    // @TODO: Refactor to avoid callback hell.
     // @TODO: Validate user input.
     // Route for updating project.
     app.put("/projects/:id", authHelpers.checkIfAuthenticated, function(req, res) {
@@ -226,7 +260,7 @@ module.exports = function(app, models, S) {
         return true;
     }
 
-    function removeFolder (folderId, models) {
+    function removeFolder (folderId) {
         models.Folder.findById(folderId, function(err, folder) {
             if (!err && folder) {
                 for (var i = 0; i < folder.folders.length; i++) {
