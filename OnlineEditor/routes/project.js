@@ -5,7 +5,7 @@ module.exports = function(app, models, S) {
     var request = require("request");
     var events = require("events");
     var emitter = new events.EventEmitter();
-
+    var GitHubAPI = require("github-api");
 
     // Route for getting all projects avaiable for current logged user.
     app.get("/projects", authHelpers.checkIfAuthenticated, function(req, res) {
@@ -85,8 +85,6 @@ module.exports = function(app, models, S) {
 
     });
 
-
-    // https://www.npmjs.org/package/github-api
     emitter.on("createProjectOnGitHub", function(project, reqBody, rootFolder, user) {
         request({
             url: "https://api.github.com/user/repos",
