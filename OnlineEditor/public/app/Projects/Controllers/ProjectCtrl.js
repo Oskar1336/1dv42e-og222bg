@@ -1,7 +1,7 @@
 
 
-angular.module("OnlineEditor.Projects").controller("ProjectCtrl", ["$scope", "$rootScope", "$modal", "ProjectFactory", "AlertFactory",
-    function($scope, $rootScope, $modal, ProjectFactory, AlertFactory) {
+angular.module("OnlineEditor.Projects").controller("ProjectCtrl", ["$scope", "$rootScope", "$modal", "ProjectFactory", "AlertService",
+    function($scope, $rootScope, $modal, ProjectFactory, AlertService) {
 
         $scope.projects = $rootScope.projects;
         $rootScope.$watch("projects", function() {
@@ -10,19 +10,23 @@ angular.module("OnlineEditor.Projects").controller("ProjectCtrl", ["$scope", "$r
         $scope.newProject = {};
 
         ProjectFactory.get().success(function(data) {
+            console.log(data);
             $rootScope.projects = data.content;
         }).error(function(error) {
-            AlertFactory.showMessage("Something went wrong when fetching your projects, try to relode page.", "alert-danger", "createAlertBox");
+            AlertService.showMessage("Something went wrong when fetching your projects, try to relode page.", "alert-danger", "createAlertBox");
         });
 
         $scope.deleteProject = function(project) {
-            if (confirm("Are you sure you want to delete " + project.projectName + "?")) {
-                ProjectFactory.delete(project._id).success(function(data) {
-                    $scope.projects.splice($scope.projects.indexOf(project), 1);
-                }).error(function(error) {
-                    console.log(error);
-                });
-            }
+            AlertService.showPopUp("Delete file", "Are you sure you want to delete " + project.projectName +
+                                   "?(The Github repo will also be removed)", function(ok) {
+                if (ok) {
+                    ProjectFactory.delete(project._id).success(function(data) {
+                        $scope.projects.splice($scope.projects.indexOf(project), 1);
+                    }).error(function(error) {
+                        console.log(error);
+                    });
+                }
+            });
         };
 
         $scope.loadProject = function(project) {
@@ -32,7 +36,7 @@ angular.module("OnlineEditor.Projects").controller("ProjectCtrl", ["$scope", "$r
         var checkIfValid = function(project) {
             var valid = true;
             if (!project.projectName) {
-                AlertFactory.showMessage("A project name is required.", "alert-danger", "createAlertBox");
+                AlertService.showMessage("A project name is required.", "alert-danger", "createAlertBox");
                 valid = false;
             }
             return valid;
@@ -60,6 +64,7 @@ angular.module("OnlineEditor.Projects").controller("ProjectCtrl", ["$scope", "$r
 
         var EditProjectInstanceCtrl = function($scope, $modalInstance, $rootScope, project) {
             $scope.newProject = project;
+            $scope.newProject.saveToGithub = true;
             $scope.ifEdit = true;
 
             $scope.updateProject = function() {
@@ -67,7 +72,7 @@ angular.module("OnlineEditor.Projects").controller("ProjectCtrl", ["$scope", "$r
                     ProjectFactory.update($scope.newProject).success(function(data) {
                         $modalInstance.close("Done");
                     }).error(function(error) {
-                        AlertFactory.showMessage("Something went wrong when trying to update project.", "alert-danger", "createAlertBox");
+                        AlertService.showMessage("Something went wrong when trying to update project.", "alert-danger", "createAlertBox");
                     });
                 }
             };
@@ -87,7 +92,7 @@ angular.module("OnlineEditor.Projects").controller("ProjectCtrl", ["$scope", "$r
                         $rootScope.projects.push(data.content);
                         $modalInstance.close("Done");
                     }).error(function(error) {
-                        AlertFactory.showMessage("Something went wrong when trying to create project.", "alert-danger", "createAlertBox");
+                        AlertService.showMessage("Something went wrong when trying to create project.", "alert-danger", "createAlertBox");
                     });
                 }
             };

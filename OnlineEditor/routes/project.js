@@ -9,13 +9,19 @@ module.exports = function(app, models, S) {
 
     // Route for getting all projects avaiable for current logged user.
     app.get("/projects", authHelpers.checkIfAuthenticated, function(req, res) {
-        models.Project.find({users: req.user._id}).populate("owner users rootFolder").exec(function(err, projects) {
+        models.Project.find({users: req.user._id, saveToGithub: false})
+                      .populate("owner users rootFolder")
+                      .exec(function(err, projects) {
             if (err) {
                 res.status(500);
                 res.send({error: err, statusCode: 500});
             } else {
-                res.status(200);
-                res.send({content: projects, statusCode: 200});
+                getUserRepos(req.user, function(err, data) {
+                    res.status(200);
+                    res.send({content: JSON.parse(data), statusCode: 200});
+                });
+                // res.status(200);
+                // res.send({content: projects, statusCode: 200});
             }
         });
     });
@@ -81,10 +87,6 @@ module.exports = function(app, models, S) {
         });
     });
 
-    emitter.on("commitRootFolder", function(rootFolder, githubProject, user) {
-
-    });
-
     emitter.on("createProjectOnGitHub", function(project, reqBody, rootFolder, user) {
         request({
             url: "https://api.github.com/user/repos",
@@ -106,6 +108,7 @@ module.exports = function(app, models, S) {
                 console.log(err);
             } else {
                 project.htmlLink = body.html_url;
+                project.githubRepoName = body.name;
                 project.save();
             }
         });
@@ -117,7 +120,8 @@ module.exports = function(app, models, S) {
             projectName: newProjectInfo.projectName,
             owner: req.user._id,
             users: [ req.user._id ],
-            rootFolder: rootFolder._id
+            rootFolder: rootFolder._id,
+            saveToGithub: req.body.saveToGithub
         });
         newProject.save(function(err) {
             if (err) {
@@ -153,6 +157,11 @@ module.exports = function(app, models, S) {
             res.status(400);
             res.send({ error: "Bad request params is not valid.", statusCode: 400 });
         }
+    });
+
+    // Route for commit to github.
+    app.put("/project/:id", authHelpers.checkIfAuthenticated, function(req, res) {
+
     });
 
     // @TODO: Validate user input.
@@ -220,6 +229,26 @@ module.exports = function(app, models, S) {
         });
     });
 
+    emitter.on("removeProject", function(projectId, callback) {
+        // Delete project.
+        models.Project.remove({_id: projectId}).exec(function(err) {
+            callback(err, err ? 500 : 204);
+        });
+    });
+
+    emitter.on("removeRepoFromGithub", function(user, project, callback) {
+        request({
+            url: "https://api.github.com/repos/"+user.username+"/"+project.githubRepoName,
+            method: "DELETE",
+            headers: {
+                "User-Agent": "1dv42e-og222bg",
+                "Authorization": "token " + user.accessToken
+            }
+        }, function(err, res, body) {
+            emitter.emit("removeProject", project._id, callback);
+        });
+    });
+
     // Route for removing a project.
     app.delete("/projects/:id", authHelpers.checkIfAuthenticated, function(req, res) {
         models.Project.findById(req.params.id, function(err, project) {
@@ -236,11 +265,22 @@ module.exports = function(app, models, S) {
                         user.save();
                     });
                 }
-                // Delete project.
-                models.Project.remove({_id: project._id}).exec();
 
-                res.status(204);
-                res.send("Project deleted");
+                var removeCallback = function(err, statusCode) {
+                    if (err) {
+                        res.status(statusCode);
+                        res.send({error: err, statusCode: statusCode});
+                    } else {
+                        res.status(statusCode);
+                        res.send({content: "Project deleted", statusCode: statusCode});
+                    }
+                };
+
+                if (project.saveToGithub) {
+                    emitter.emit("removeRepoFromGithub", req.user, project, removeCallback);
+                } else {
+                    emitter.emit("removeProject", project._id, removeCallback);
+                }
             } else {
                 res.status(401);
                 res.send({error: "User not authorized to access requested project.", statusCode: 401});
@@ -268,6 +308,23 @@ module.exports = function(app, models, S) {
                     models.File.remove({_id: folder.files[f]}).exec();
                 }
                 models.Folder.remove({_id: folder._id}).exec();
+            }
+        });
+    }
+
+    function getUserRepos (user, callback) {
+        request({
+            url: "https://api.github.com/user/repos",
+            method: "GET",
+            headers: {
+                "User-Agent": "1dv42e-og222bg",
+                "Authorization": "token " + user.accessToken
+            }
+        }, function(err, res, body) {
+            if (err) {
+                callback(err, body);
+            } else {
+                callback(null, body);
             }
         });
     }

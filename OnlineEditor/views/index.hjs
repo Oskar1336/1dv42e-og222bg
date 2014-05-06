@@ -36,7 +36,7 @@
     <script src="/app/Projects/Controllers/ProjectCtrl.js"></script>
     <!-- Alert scripts -->
     <script src="/app/Alert/Module.js"></script>
-    <script src="/app/Alert/Services/AlertFactory.js"></script>
+    <script src="/app/Alert/Services/AlertService.js"></script>
     <!-- Editor scripts -->
     <script src="/app/Editor/Module.js"></script>
     <script src="/app/Editor/Controllers/EditorCtrl.js"></script>
