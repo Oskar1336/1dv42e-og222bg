@@ -8,6 +8,7 @@ module.exports = function(mongoose) {
         users: [ { type: Schema.Types.ObjectId, ref: "User" } ],
         rootFolder: { type: Schema.Types.ObjectId, ref: "Folder" },
         saveToGithub: Boolean,
-        githubRepoName: String
+        githubRepoName: String,
+        githubId: Number
     }));
 };

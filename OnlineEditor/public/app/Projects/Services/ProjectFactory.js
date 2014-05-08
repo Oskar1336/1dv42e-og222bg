@@ -17,6 +17,13 @@ angular.module("OnlineEditor.Projects").factory("ProjectFactory", ["$http",
                     url: "/projects/"+id
                 });
             },
+            loadGHProject: function(project) {
+                return $http({
+                    method: "POST",
+                    url: "/loadghproject",
+                    data: project
+                });
+            },
             delete: function(id) {
                 return $http({
                     method: "DELETE",

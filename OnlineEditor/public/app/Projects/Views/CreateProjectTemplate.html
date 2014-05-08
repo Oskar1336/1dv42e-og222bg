@@ -17,7 +17,7 @@
                 <input type="text" id="projectusers" class="form-control" data-ng-model="newProject.users" name="projectusers" />
             </div>
         </div>
-        <div class="form-group">
+        <div class="form-group" data-ng-hide="ifEdit">
             <label for="saveOnGithub" class="col-sm-4 control-label">Save project on Github</label>
             <input type="checkbox" data-ng-model="newProject.saveToGithub" />
         </div>

@@ -18,10 +18,10 @@ module.exports = function(app, models, S) {
             } else {
                 getUserRepos(req.user, function(err, data) {
                     res.status(200);
-                    res.send({content: JSON.parse(data), statusCode: 200});
+                    res.send({githubProjects: JSON.parse(data), localProjects: projects, statusCode: 200});
                 });
                 // res.status(200);
-                // res.send({content: projects, statusCode: 200});
+                // res.send({localProjects: projects, statusCode: 200});
             }
         });
     });
@@ -44,6 +44,176 @@ module.exports = function(app, models, S) {
             }
         });
     });
+
+    emitter.on("saveProjectContent", function(newProject, rootFolder, items, res, accessToken) {
+        for (var i = 0; i < items.length; i++) {
+            if (items[i].type === "dir") {
+                saveFolder(items[i], rootFolder, newProject, accessToken);
+            } else if (items[i].type === "file") {
+                saveFile(items[i], rootFolder, accessToken);
+            }
+        }
+
+        res.status(200);
+        res.send({content: items, statuscode: 200});
+    });
+
+    emitter.on("createGHProject", function(rootFolder, projectName, items, res, user) {
+        var newProject = new models.Project({
+            projectName: projectName,
+            owner: user._id,
+            users: [ user._id ],
+            rootFolder: rootFolder._id,
+            saveToGithub: true
+        });
+        newProject.save(function(err) {
+            if (err) {
+                res.status(500);
+                res.send({error: err, statusCode: 500});
+            } else {
+                models.User.findById(user._id, function(err, currentUser) {
+                    if (err) {
+                        res.status(500);
+                        res.send({error: err, statusCode: 500});
+                    } else {
+                        currentUser.projects.push(newProject._id);
+                        currentUser.save();
+                    }
+                });
+                rootFolder.parent = rootFolder._id;
+                rootFolder.project = newProject._id;
+                rootFolder.save(function(err) {
+                    if (err) {
+                        res.status(500);
+                        res.send({error: err, statusCode: 500});
+                    } else {
+                        emitter.emit("saveProjectContent", newProject, rootFolder, items, res, user.accessToken);
+                    }
+                });
+            }
+        });
+    });
+
+    app.post("/loadghproject", authHelpers.checkIfAuthenticated, function(req, res) {
+        request({
+            url: "https://api.github.com/repos/"+req.user.username+"/"+req.body.projectName+"/contents",
+            method: "GET",
+            headers: {
+                "User-Agent": "1dv42e-og222bg",
+                "Authorization": "token "+req.user.accessToken
+            }
+        }, function(err, response, body) {
+            var items = JSON.parse(body);
+            models.Project.find({projectName: req.body.projectName}).populate("users rootFolder owner").exec(function(err, projects) {
+                console.log(projects);
+                if (projects.length === 0) {
+                    var rootFolder = new models.Folder({
+                        folderName: req.body.projectName,
+                        files: [],
+                        folders: []
+                    });
+                    rootFolder.save(function(err) {
+                        if (err) {
+                            res.status(500);
+                            res.send({error: err, statusCode: 500});
+                        } else {
+                            emitter.emit("createGHProject", rootFolder, req.body.projectName, items, res, req.user);
+                        }
+                    });
+                } else {
+                    res.status(200);
+                    res.send({content: projects[0], statusCode: 200});
+                }
+            });
+        });
+    });
+
+    function saveFolder (folder, parentFolder, project, accessToken) {
+        // Save new folder and set parentFolder as parent.
+        var newFolder = new models.Folder({
+            folderName: folder.name,
+            files: [],
+            folders: [],
+            githubUrl: folder.url,
+            parent: parentFolder._id,
+            project: project._id
+        });
+        newFolder.save(function(err) {
+            if (err) {
+                // @TODO: Smth?
+            } else {
+                parentFolder.folders.push(newFolder._id);
+                parentFolder.save(function(err) {
+                    if (err) {
+                        // @TODO: Smth?
+                    } else {
+                        request({
+                            url: folder.url,
+                            method: "GET",
+                            headers: {
+                                "User-Agent": "1dv42e-og222bg",
+                                "Authorization": "token "+accessToken
+                            }
+                        }, function(err, response, body) {
+                            var items = JSON.parse(body);
+                            for (var i = 0; i < items.length; i++) {
+                                console.log(items[i].type);
+                                if (items[i].type === "dir") {
+                                    saveFolder(items[i], newFolder, project, accessToken);
+                                } else if (items[i].type === "file") {
+                                    saveFile(items[i], newFolder, accessToken);
+                                }
+                            }
+                        });
+                    }
+                });
+            }
+        });
+    }
+
+    function saveFile (fileInfo, parentFolder, accessToken) {
+        request({
+            url: fileInfo.url,
+            method: "GET",
+            headers: {
+                "User-Agent": "1dv42e-og222bg",
+                "Authorization": "token "+accessToken
+            }
+        }, function(err, response, body) {
+            var file = JSON.parse(body);
+            var newFile = new models.Folder({
+                name: getFileName(file.name),
+                type: getFileExtension(file.name),
+                content: getFileContent(file.content, file.encoding),
+                folder: parentFolder._id
+            });
+            newFile.save(function(err) {
+                if (err) {
+
+                } else {
+                    parentFolder.files.push(newFile._id);
+                    parentFolder.save();
+                }
+            });
+        });
+    }
+
+    function getFileContent (content, encoding) {
+        var encodedContentArray = content.split("\\n");
+        var contentArray = [];
+        for (var i = 0; i < encodedContentArray.length; i++) {
+            contentArray.push(new Buffer(encodedContentArray[i], encoding).toString('ascii'));
+        }
+        return contentArray;
+    }
+
+    function getFileName (fileName) {
+        return fileName.split(".")[0];
+    }
+
+    function getFileExtension (fileName) {
+        return fileName.split(".").pop();
+    }
 
     // Event that sends project to client side.
     emitter.on("sendProject", function(rootFolder, newProject, res) {
@@ -289,13 +459,19 @@ module.exports = function(app, models, S) {
     });
 
     function validateProjectInfo (project) {
+        var valid = true;
         if (!project.projectName) {
-            return false;
+            valid = false;
         }
         if (S(project.projectName).stripTags().s !== project.projectName) {
-            return false;
+            valid = false;
         }
-        return true;
+        models.Project.find({projectName: project.projectName}, function(err, projects) {
+            if (projects.length > 0) {
+                valid = false;
+            }
+        });
+        return valid;
     }
 
     function removeFolder (folderId) {
@@ -328,4 +504,6 @@ module.exports = function(app, models, S) {
             }
         });
     }
+
+
 };
