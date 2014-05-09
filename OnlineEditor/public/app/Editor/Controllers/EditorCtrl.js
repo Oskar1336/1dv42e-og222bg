@@ -711,6 +711,7 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
                 } else if (typeof folder.folders[i] === "string") {
                     if (!folderExists(folder.folders[i], folder._id)) {
                         FolderFactory.getById(folder.folders[i]).success(function(data) {
+                            console.log(data);
                             $rootScope.subfolders[folder._id].push(data);
                         }).error(function(error) {
                             console.log(error);
@@ -721,6 +722,7 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
         };
 
         var loadFiles = function(folder) {
+            // console.log(folder);
             if (typeof $rootScope.folderFiles[folder._id] === "undefined") {
                 $rootScope.folderFiles[folder._id] = [];
             }
@@ -733,6 +735,7 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
                     if (!fileExists(folder.files[x], folder._id)) {
                         FileFactory.getById(folder.files[x]).success(function(data) {
                             $rootScope.folderFiles[folder._id].push(data);
+                            console.log(data);
                         }).error(function(error) {
                             console.log(error);
                         });

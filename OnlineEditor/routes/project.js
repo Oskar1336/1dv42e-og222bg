@@ -9,7 +9,7 @@ module.exports = function(app, models, S) {
 
     // Route for getting all projects avaiable for current logged user.
     app.get("/projects", authHelpers.checkIfAuthenticated, function(req, res) {
-        models.Project.find({users: req.user._id, saveToGithub: false})
+        models.Project.find({users: req.user._id})
                       .populate("owner users rootFolder")
                       .exec(function(err, projects) {
             if (err) {
@@ -20,8 +20,6 @@ module.exports = function(app, models, S) {
                     res.status(200);
                     res.send({githubProjects: JSON.parse(data), localProjects: projects, statusCode: 200});
                 });
-                // res.status(200);
-                // res.send({localProjects: projects, statusCode: 200});
             }
         });
     });
@@ -45,20 +43,25 @@ module.exports = function(app, models, S) {
         });
     });
 
-    emitter.on("saveProjectContent", function(newProject, rootFolder, items, res, accessToken) {
+    emitter.on("saveProjectContent", function(newProject, rootFolder, items, accessToken, callback) {
         for (var i = 0; i < items.length; i++) {
             if (items[i].type === "dir") {
+                console.log("folder");
                 saveFolder(items[i], rootFolder, newProject, accessToken);
             } else if (items[i].type === "file") {
+                console.log("file");
                 saveFile(items[i], rootFolder, accessToken);
             }
         }
 
-        res.status(200);
-        res.send({content: items, statuscode: 200});
+        models.Project.findById(newProject._id).populate("users rootFolder owner").exec(function(err, project) {
+            callback(project);
+        });
+        // res.status(200);
+        // res.send({content: items, statuscode: 200});
     });
 
-    emitter.on("createGHProject", function(rootFolder, projectName, items, res, user) {
+    emitter.on("createGHProject", function(rootFolder, projectName, items, res, user, callback) {
         var newProject = new models.Project({
             projectName: projectName,
             owner: user._id,
@@ -87,7 +90,7 @@ module.exports = function(app, models, S) {
                         res.status(500);
                         res.send({error: err, statusCode: 500});
                     } else {
-                        emitter.emit("saveProjectContent", newProject, rootFolder, items, res, user.accessToken);
+                        emitter.emit("saveProjectContent", newProject, rootFolder, items, user.accessToken, callback);
                     }
                 });
             }
@@ -105,7 +108,6 @@ module.exports = function(app, models, S) {
         }, function(err, response, body) {
             var items = JSON.parse(body);
             models.Project.find({projectName: req.body.projectName}).populate("users rootFolder owner").exec(function(err, projects) {
-                console.log(projects);
                 if (projects.length === 0) {
                     var rootFolder = new models.Folder({
                         folderName: req.body.projectName,
@@ -117,7 +119,10 @@ module.exports = function(app, models, S) {
                             res.status(500);
                             res.send({error: err, statusCode: 500});
                         } else {
-                            emitter.emit("createGHProject", rootFolder, req.body.projectName, items, res, req.user);
+                            emitter.emit("createGHProject", rootFolder, req.body.projectName, items, res, req.user, function(project) {
+                                res.status(200);
+                                res.send({content: project, statusCode: 200});
+                            });
                         }
                     });
                 } else {
@@ -181,7 +186,7 @@ module.exports = function(app, models, S) {
             }
         }, function(err, response, body) {
             var file = JSON.parse(body);
-            var newFile = new models.Folder({
+            var newFile = new models.File({
                 name: getFileName(file.name),
                 type: getFileExtension(file.name),
                 content: getFileContent(file.content, file.encoding),
@@ -189,30 +194,48 @@ module.exports = function(app, models, S) {
             });
             newFile.save(function(err) {
                 if (err) {
-
+                    console.log(err);
                 } else {
-                    parentFolder.files.push(newFile._id);
-                    parentFolder.save();
+                    models.Folder.findByIdAndUpdate(parentFolder._id, {$push: {files: newFile._id}},
+                                                                      {safe: true, upsert: true}).exec();
                 }
             });
         });
     }
 
     function getFileContent (content, encoding) {
-        var encodedContentArray = content.split("\\n");
-        var contentArray = [];
-        for (var i = 0; i < encodedContentArray.length; i++) {
-            contentArray.push(new Buffer(encodedContentArray[i], encoding).toString('ascii'));
+        if (typeof content !== "undefined") {
+            var utfArray = new Buffer(content, encoding).toString().split("\n");
+            var contentArray = [];
+            for (var i = 0; i < utfArray.length; i++) {
+                contentArray.push(replaceToCustomXML(utfArray[i]));
+            }
+            return contentArray;
+        } else {
+            return [""];
         }
-        return contentArray;
+    }
+
+    function replaceToCustomXML (string) {
+        string = string.replace(/   /g, "<TAB>");
+        string = string.replace(/ /g, "<SPACE>");
+        return string;
     }
 
     function getFileName (fileName) {
-        return fileName.split(".")[0];
+        if (typeof fileName !== "undefined") {
+            return fileName.split(".")[0];
+        } else {
+            return "";
+        }
     }
 
     function getFileExtension (fileName) {
-        return fileName.split(".").pop();
+        if (typeof fileName !== "undefined") {
+            return fileName.split(".").pop();
+        }  else {
+            return "";
+        }
     }
 
     // Event that sends project to client side.
