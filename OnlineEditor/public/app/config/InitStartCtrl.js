@@ -9,5 +9,6 @@ angular.module("OnlineEditor").controller("InitStartCtrl", ["$route",
                 window.location = "/auth/github";
             }
         }
+        $(document).unbind("keypres");
     }
 ]);

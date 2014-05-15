@@ -43,7 +43,7 @@ module.exports = function(app, models, S) {
         });
     });
 
-    emitter.on("saveProjectContent", function(newProject, rootFolder, items, accessToken, callback) {
+    emitter.on("saveProjectContent", function(newProject, rootFolder, items, accessToken) {
         for (var i = 0; i < items.length; i++) {
             if (items[i].type === "dir") {
                 console.log("folder");
@@ -53,15 +53,9 @@ module.exports = function(app, models, S) {
                 saveFile(items[i], rootFolder, accessToken);
             }
         }
-
-        models.Project.findById(newProject._id).populate("users rootFolder owner").exec(function(err, project) {
-            callback(project);
-        });
-        // res.status(200);
-        // res.send({content: items, statuscode: 200});
     });
 
-    emitter.on("createGHProject", function(rootFolder, projectName, items, res, user, callback) {
+    emitter.on("createGHProject", function(rootFolder, projectName, items, res, user) {
         var newProject = new models.Project({
             projectName: projectName,
             owner: user._id,
@@ -90,7 +84,7 @@ module.exports = function(app, models, S) {
                         res.status(500);
                         res.send({error: err, statusCode: 500});
                     } else {
-                        emitter.emit("saveProjectContent", newProject, rootFolder, items, user.accessToken, callback);
+                        emitter.emit("saveProjectContent", newProject, rootFolder, items, user.accessToken);
                     }
                 });
             }
@@ -107,8 +101,8 @@ module.exports = function(app, models, S) {
             }
         }, function(err, response, body) {
             var items = JSON.parse(body);
-            models.Project.find({projectName: req.body.projectName}).populate("users rootFolder owner").exec(function(err, projects) {
-                if (projects.length === 0) {
+            models.Project.findOne({projectName: req.body.projectName}).populate("users rootFolder owner").exec(function(err, project) {
+                if (typeof project === "undefined" || project === null) {
                     var rootFolder = new models.Folder({
                         folderName: req.body.projectName,
                         files: [],
@@ -119,15 +113,12 @@ module.exports = function(app, models, S) {
                             res.status(500);
                             res.send({error: err, statusCode: 500});
                         } else {
-                            emitter.emit("createGHProject", rootFolder, req.body.projectName, items, res, req.user, function(project) {
-                                res.status(200);
-                                res.send({content: project, statusCode: 200});
-                            });
+                            emitter.emit("createGHProject", rootFolder, req.body.projectName, items, res, req.user);
                         }
                     });
                 } else {
                     res.status(200);
-                    res.send({content: projects[0], statusCode: 200});
+                    res.send({content: project, statusCode: 200});
                 }
             });
         });
@@ -217,7 +208,9 @@ module.exports = function(app, models, S) {
     }
 
     function replaceToCustomXML (string) {
-        string = string.replace(/   /g, "<TAB>");
+        string = string.replace(/\t/, "<TAB>");
+        string = string.replace(/   /, "<TAB>");
+        string = string.replace("   ", "<TAB>");
         string = string.replace(/ /g, "<SPACE>");
         return string;
     }

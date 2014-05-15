@@ -16,19 +16,6 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
         $scope.currentPos = { row: 0, char: 0 };
         var showMarker = true;
 
-        // interval to show and hide marker.
-        window.setInterval(function() {
-            if (showMarker) {
-                $scope.$apply(function() {
-                    showMarker = false;
-                });
-            } else {
-                $scope.$apply(function() {
-                    showMarker = true;
-                });
-            }
-        }, 600);
-
         $scope.project = $rootScope.selectedProject;
         $rootScope.$watch("selectedProject", function() {
             $scope.project = $rootScope.selectedProject;
