@@ -191,11 +191,23 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
                             $scope.rows[$scope.currentPos.row].rowLength--;
                             $scope.currentPos.char--;
                         });
+                    } else if ($scope.rows[$scope.currentPos.row].rowLength > 0) {
+                        $scope.$apply(function() {
+                            if ($scope.currentPos.row !== 0) {
+                                var remainingText = $scope.rows[$scope.currentPos.row].text;
+                                $scope.currentPos.row--;
+                                $scope.currentPos.char = $scope.rows[$scope.currentPos.row].rowLength;
+                                $scope.rows[$scope.currentPos.row].text += remainingText;
+                                $scope.rows[$scope.currentPos.row].rowLength += replaceHtmlCodes(remainingText).length;
+                                $scope.rows.splice($scope.currentPos.row+1, 1);
+                            }
+                        });
                     } else {
                         $scope.$apply(function() {
                             $scope.rows.splice($scope.currentPos.row, 1);
                             if ($scope.currentPos.row !== 0) {
                                 $scope.currentPos.row--;
+                                $scope.currentPos.char = $scope.rows[$scope.currentPos.row].rowLength;
                             }
                             if ($scope.rows.length === 0) {
                                 $scope.rows.push({
