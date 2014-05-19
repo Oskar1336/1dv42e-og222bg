@@ -68,6 +68,10 @@ a {
     overflow: scroll;
 }
 
+    .left-side-bar .list-group-item {
+        min-width: 280px;
+    }
+
 .editor-menu-item {
     margin-left: 20px;
     float:left;
@@ -79,9 +83,6 @@ a {
 }
 
 .code-wrapper {
-    height: 570px;
-    overflow: scroll;
-    width: 1000px;
     float:left;
     color: white;
     font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace;
@@ -103,7 +104,6 @@ a {
     background-color: #d4d4d4;
     margin-right: 2px;
     float:left;
-    overflow: hidden;
 }
 
     .open-file .selected {
@@ -133,13 +133,14 @@ a {
 .code-layer {
     float:left;
     position:absolute;
-    /*z-index: 10000;*/
+    z-index: 5000;
 }
 
 .marker-layer {
     position:absolute;
     float: left;
-    /*z-index: 5000;*/
+    z-index: 10000;
+    cursor: text;
 }
 
 .marker-layout {
@@ -150,6 +151,7 @@ a {
 
 .marker {
     background-color: #FF4000;
+    width:1px;
 }
 
 .row-count {
