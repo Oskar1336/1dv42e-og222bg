@@ -3,34 +3,21 @@
 angular.module("OnlineEditor.Editor").controller("CodeCtrl", ["$scope", "$rootScope", "$sce", "$location", "AlertService", "FileFactory",
     function($scope, $rootScope, $sce, $location, AlertService, FileFactory) {
         "use strict";
-        $scope.openFile = null;
         $scope.rows = [{
             text: "",
-            rowLenght: 0
+            rowLength: 0
         }];
-        $rootScope.$watch("fileContent", function() {
-            $scope.rows = $rootScope.fileContent;
-            $scope.currentPos = { row: 0, char: 0 };
+        $rootScope.$watch("rows", function() {
+            if (typeof $rootScope.rows !== "undefined" && $rootScope.rows !== null) {
+                $scope.rows = $rootScope.rows;
+            }
         });
         $scope.currentPos = { row: 0, char: 0 };
-
-        $scope.stringToChars = function(string) {
-            var tempStrig = replaceHtmlCodes(string.text);
-            var t = tempStrig.split("");
-            t.push("");
-            return t;
-        };
-
-        $scope.checkMarkerPosition = function(parentIndex, index) {
-            if ($scope.currentPos.row === parentIndex && $scope.currentPos.char === index) {
-                return true;
+        $rootScope.$watch("currentPos", function() {
+            if (typeof $rootScope.currentPos !== "undefined" && $rootScope.currentPos !== null) {
+                $scope.currentPos = $rootScope.currentPos;
             }
-            return false;
-        };
-
-        $scope.toTrustHtml = function(html) {
-            return $sce.trustAsHtml(html);
-        };
+        });
 
         // Function for binding keydown event.
         var bindKeydown = function() {
@@ -107,23 +94,24 @@ angular.module("OnlineEditor.Editor").controller("CodeCtrl", ["$scope", "$rootSc
                     } else if (event.which === 226) {
                         pushCharToString("|");
                     }
-                } else if (event.which === 83 && event.shiftKey === false && event.ctrlKey === true && event.altKey === false) {
-                    // Ctrl+s Save current file
-                    event.preventDefault();
-                    if ($scope.openFile !== null) {
-                        var stringArray = [];
-                        
-                        for (var i = 0; i < $scope.rows.length; i++) {
-                            stringArray.push(replaceHtmlCodesToCustomXML($scope.rows[i].text));
-                        }
+                } else if (event.shiftKey === false && event.ctrlKey === true && event.altKey === false) {
+                    if (event.which === 83) { // Ctrl+s Saving file.
+                        event.preventDefault();
+                        if ($rootScope.openFile !== null) {
+                            var stringArray = [];
+                            
+                            for (var i = 0; i < $scope.rows.length; i++) {
+                                stringArray.push(replaceHtmlCodesToCustomXML($scope.rows[i].text));
+                            }
 
-                        FileFactory.saveFile(stringArray, $scope.openFile._id).success(function(data) {
-                            openedFiles[data._id] = data;
-                        }).error(function(error) {
-                            console.log(error);
-                        });
-                    } else {
-                        console.log("Show new file window with a chance to select were to save it");
+                            FileFactory.saveFile(stringArray, $rootScope.openFile._id).success(function(data) {
+                                $rootScope.openedFiles[data._id] = data;
+                            }).error(function(error) {
+                                console.log(error);
+                            });
+                        } else {
+                            console.log("Show new file window with a chance to select were to save it");
+                        }
                     }
                 }
                 // Tab
@@ -143,14 +131,41 @@ angular.module("OnlineEditor.Editor").controller("CodeCtrl", ["$scope", "$rootSc
                 // Enter
                 if (event.which === 13) {
                     event.preventDefault();
-                    $scope.$apply(function() {
-                        $scope.rows.splice($scope.currentPos.row+1, 0, {
-                            text: "",
-                            rowLength: 0
+                    if ($scope.rows[$scope.currentPos.row].rowLength === $scope.currentPos.char) {
+                        // New empty row
+                        $scope.$apply(function() {
+                            $scope.rows.splice($scope.currentPos.row+1, 0, {
+                                text: "",
+                                rowLength: 0
+                            });
+                            $scope.currentPos.row++;
+                            $scope.currentPos.char = 0;
                         });
-                        $scope.currentPos.row++;
-                        $scope.currentPos.char = 0;
-                    });
+                    } else {
+                        // New row with content after marker
+                        var tempText = replaceHtmlCodes($scope.rows[$scope.currentPos.row].text);
+                        var textArray = tempText.split("");
+                        var textBefore = "";
+                        var textAfter = "";
+                        for (var i = 0; i < $scope.currentPos.char; i++) {
+                            textBefore += textArray[i];
+                        }
+                        for (var i = $scope.currentPos.char; i < textArray.length; i++) {
+                            textAfter += textArray[i];
+                        }
+                        $scope.$apply(function() {
+                            $scope.rows[$scope.currentPos.row] = {
+                                text: convertToHtmlCodes(textBefore),
+                                rowLength: textBefore.length
+                            };
+                            $scope.rows.splice($scope.currentPos.row+1, 0, {
+                                text: convertToHtmlCodes(textAfter),
+                                rowLength: textAfter.length
+                            });
+                            $scope.currentPos.row++;
+                            $scope.currentPos.char = 0;
+                        });
+                    }
                 }
                 // Backspace
                 if (event.which === 8) {
@@ -164,11 +179,23 @@ angular.module("OnlineEditor.Editor").controller("CodeCtrl", ["$scope", "$rootSc
                             $scope.rows[$scope.currentPos.row].rowLength--;
                             $scope.currentPos.char--;
                         });
+                    } else if ($scope.rows[$scope.currentPos.row].rowLength > 0) {
+                        $scope.$apply(function() {
+                            if ($scope.currentPos.row !== 0) {
+                                var remainingText = $scope.rows[$scope.currentPos.row].text;
+                                $scope.currentPos.row--;
+                                $scope.currentPos.char = $scope.rows[$scope.currentPos.row].rowLength;
+                                $scope.rows[$scope.currentPos.row].text += remainingText;
+                                $scope.rows[$scope.currentPos.row].rowLength += replaceHtmlCodes(remainingText).length;
+                                $scope.rows.splice($scope.currentPos.row+1, 1);
+                            }
+                        });
                     } else {
                         $scope.$apply(function() {
                             $scope.rows.splice($scope.currentPos.row, 1);
                             if ($scope.currentPos.row !== 0) {
                                 $scope.currentPos.row--;
+                                $scope.currentPos.char = $scope.rows[$scope.currentPos.row].rowLength;
                             }
                             if ($scope.rows.length === 0) {
                                 $scope.rows.push({
@@ -192,7 +219,7 @@ angular.module("OnlineEditor.Editor").controller("CodeCtrl", ["$scope", "$rootSc
                             $scope.currentPos.char--;
                         } else if($scope.currentPos.row > 0) {
                             $scope.currentPos.row--;
-                            $scope.currentPos.char = $scope.rows[$scope.currentPos.row].rowLength+1;
+                            $scope.currentPos.char = $scope.rows[$scope.currentPos.row].rowLength;
                         }
                     });
                 }
@@ -200,9 +227,9 @@ angular.module("OnlineEditor.Editor").controller("CodeCtrl", ["$scope", "$rootSc
                 if (event.which === 39) {
                     event.preventDefault();
                     $scope.$apply(function() {
-                        if ($scope.currentPos.char < $scope.rows[$scope.currentPos.row].rowLength+1) {
+                        if ($scope.currentPos.char < $scope.rows[$scope.currentPos.row].rowLength) {
                             $scope.currentPos.char++;
-                        } else {
+                        } else if ($scope.currentPos.row < $scope.rows.length-1) {
                             $scope.currentPos.row++;
                             $scope.currentPos.char = 0;
                         }
@@ -214,8 +241,8 @@ angular.module("OnlineEditor.Editor").controller("CodeCtrl", ["$scope", "$rootSc
                     $scope.$apply(function() {
                         if ($scope.currentPos.row > 0) {
                             $scope.currentPos.row--;
-                            if ($scope.currentPos.char > $scope.rows[$scope.currentPos.row].rowLength+1) {
-                                $scope.currentPos.char = $scope.rows[$scope.currentPos.row].rowLength+1;
+                            if ($scope.currentPos.char > $scope.rows[$scope.currentPos.row].rowLength) {
+                                $scope.currentPos.char = $scope.rows[$scope.currentPos.row].rowLength;
                             }
                         }
                     });
@@ -226,42 +253,98 @@ angular.module("OnlineEditor.Editor").controller("CodeCtrl", ["$scope", "$rootSc
                     $scope.$apply(function() {
                         if ($scope.currentPos.row < $scope.rows.length-1) {
                             $scope.currentPos.row++;
-                            if ($scope.currentPos.char > $scope.rows[$scope.currentPos.row].rowLength+1) {
-                                $scope.currentPos.char = $scope.rows[$scope.currentPos.row].rowLength+1;
+                            if ($scope.currentPos.char > $scope.rows[$scope.currentPos.row].rowLength) {
+                                $scope.currentPos.char = $scope.rows[$scope.currentPos.row].rowLength;
                             }
                         }
                     });
                 }
+                // Delete
+                if (event.which === 46) {
+                    event.preventDefault();
+                    if ($scope.currentPos.char < $scope.rows[$scope.currentPos.row].rowLength) {
+                        tempString = replaceHtmlCodes($scope.rows[$scope.currentPos.row].text);
+                        charArray = tempString.split("");
+                        charArray.splice($scope.currentPos.char, 1);
+                        $scope.$apply(function() {
+                            $scope.rows[$scope.currentPos.row].text = convertToHtmlCodes(joinStringArray(charArray));
+                            $scope.rows[$scope.currentPos.row].rowLength--;
+                        });
+                    } else if ($scope.currentPos.row !== $scope.rows.length-1) {
+                        var textBelow = $scope.rows[$scope.currentPos.row+1].text;
+                        $scope.$apply(function() {
+                            $scope.rows[$scope.currentPos.row].text += textBelow;
+                            $scope.rows[$scope.currentPos.row].rowLength += replaceHtmlCodes(textBelow).length;
+                            $scope.rows.splice($scope.currentPos.row+1, 1);
+                        });
+                    }
+                }
                 // Home
                 if (event.which === 36) {
                     event.preventDefault();
-                    $scope.$apply(function() {
-                        $scope.currentPos.char = 0;
-                    });
+                    if (event.ctrlKey === true) {
+                        $scope.$apply(function() {
+                            $scope.currentPos.char = 0;
+                            $scope.currentPos.row = 0;
+                        });
+                    } else {
+                        $scope.$apply(function() {
+                            $scope.currentPos.char = 0;
+                        });
+                    }
                 }
                 // End
                 if (event.which === 35) {
                     event.preventDefault();
-                    $scope.$apply(function() {
-                        $scope.currentPos.char = $scope.rows[$scope.currentPos.row].rowLength+1;
-                    });
+                    if (event.ctrlKey === true) {
+                        $scope.$apply(function() {
+                            $scope.currentPos = {
+                                row: $scope.rows.length,
+                                char: 0
+                            };
+                        });
+                    } else {
+                        $scope.$apply(function() {
+                            $scope.currentPos.char = $scope.rows[$scope.currentPos.row].rowLength;
+                        });
+                    }
                 }
             });
         };
         bindKeydown();
 
+        // Public scope functions.
+        $scope.stringToChars = function(string) {
+            var tempStrig = replaceHtmlCodes(string.text);
+            var t = tempStrig.split("");
+            t.push("");
+            return t;
+        };
+
+        $scope.checkMarkerPosition = function(parentIndex, index) {
+            if ($scope.currentPos.row === parentIndex && $scope.currentPos.char === index) {
+                return true;
+            }
+            return false;
+        };
+
+        $scope.moveMarkerToPos = function(parentIndex, index) {
+            $scope.currentPos = {
+                row: parentIndex,
+                char: index
+            };
+        };
+
+        $scope.toTrustHtml = function(html) {
+            return $sce.trustAsHtml(html);
+        };
+
+        // Private functions.
         var joinStringArray = function(array) {
             var string = "";
             for (var i = 0; i < array.length; i++) {
                 string += array[i];
             }
-            return string;
-        };
-
-        var convertToHtmlCodes = function(string) {
-            string = string.replace(/ /g, "&nbsp;");
-            string = string.replace(/</g, "&lt;");
-            string = string.replace(/>/g, "&gt;");
             return string;
         };
 
@@ -272,11 +355,10 @@ angular.module("OnlineEditor.Editor").controller("CodeCtrl", ["$scope", "$rootSc
             return string;
         };
 
-        var replaceHtmlCodesToCustomXML = function(string) {
-            string = string.replace(/&nbsp;&nbsp;/g, "<TAB>");
-            string = string.replace(/&nbsp;/g, "<SPACE>");
-            string = string.replace(/&lt;/g, "<");
-            string = string.replace(/&gt;/g, ">");
+        var convertToHtmlCodes = function(string) {
+            string = string.replace(/ /g, "&nbsp;");
+            string = string.replace(/</g, "&lt;");
+            string = string.replace(/>/g, "&gt;");
             return string;
         };
 
@@ -291,6 +373,13 @@ angular.module("OnlineEditor.Editor").controller("CodeCtrl", ["$scope", "$rootSc
             });
         };
 
+        var replaceHtmlCodesToCustomXML = function(string) {
+            string = string.replace(/&nbsp;&nbsp;/g, "<TAB>");
+            string = string.replace(/&nbsp;/g, "<SPACE>");
+            string = string.replace(/&lt;/g, "<");
+            string = string.replace(/&gt;/g, ">");
+            return string;
+        };
 
     }
 ]);

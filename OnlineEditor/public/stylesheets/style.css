@@ -52,20 +52,23 @@ a {
     background-color: #f8f8f8;
     padding: 5px;
     margin-top: 0;
-    position: relative;
+    position: fixed;
     top: 0;
     left: 0;
     float:left;
+    z-index: 15000;
 }
 
 .left-side-bar {
     width: 300px;
     height: 570px;
-    position: relative;
+    position: fixed;
+    top: 30px;
     left: 0;
     background-color: #CACACA;
     float: left;
     overflow: scroll;
+    z-index: 10000;
 }
 
     .left-side-bar .list-group-item {
@@ -83,15 +86,22 @@ a {
 }
 
 .code-wrapper {
-    float:left;
+    /*float:left;*/
     color: white;
     font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace;
+    position: absolute;
+    top: 30px;
+    left: 300px;
 }
 
 .open-files {
     height: 30px;
     background-color:#f8f8f8;
     border-bottom: 2px solid #cacaca;
+    position: fixed;
+    top: 0;
+    left: 300px;
+    z-index: 20000;
 }
 
 .open-file {
@@ -133,13 +143,13 @@ a {
 .code-layer {
     float:left;
     position:absolute;
-    z-index: 5000;
+    /*z-index: 5000;*/
 }
 
 .marker-layer {
     position:absolute;
     float: left;
-    z-index: 10000;
+    /*z-index: 10000;*/
     cursor: text;
 }
 
