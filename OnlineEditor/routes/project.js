@@ -200,7 +200,6 @@ module.exports = function(app, models, S) {
             var contentArray = [];
             for (var i = 0; i < utfArray.length; i++) {
                 contentArray.push(replaceToCustomXML(utfArray[i]));
-                // contentArray.push(utfArray[i]);
             }
             return contentArray;
         } else {
@@ -210,7 +209,6 @@ module.exports = function(app, models, S) {
 
     function replaceToCustomXML (string) {
         string = string.replace(/\t/g, "<TAB>");
-        // string = string.replace(/   /g, "<TAB>");
         string = string.replace(/ /g, "<SPACE>");
         return string;
     }

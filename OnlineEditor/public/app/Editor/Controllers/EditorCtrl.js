@@ -42,7 +42,6 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
         };
 
         $scope.loadFile = function(file) {
-            console.log(file);
             if (typeof $rootScope.openedFiles[file._id] === "undefined") {
                 $rootScope.openedFiles[file._id] = file;
             }
@@ -402,7 +401,7 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
         };
 
         var convertCustomXMLToHTMLCodes = function(string) {
-            string = string.replace(/<TAB>/g, "&nbsp;&nbsp;");
+            string = string.replace(/<TAB>/g, "&nbsp;&nbsp;&nbsp;&nbsp;");
             string = string.replace(/<SPACE>/g, "&nbsp;");
             return convertToHtmlCodes(string);
         };

@@ -119,7 +119,7 @@ angular.module("OnlineEditor.Editor").controller("CodeCtrl", ["$scope", "$rootSc
                     event.preventDefault();
                     tempString = replaceHtmlCodes($scope.rows[$scope.currentPos.row].text);
                     charArray = tempString.split("");
-                    for (var t = 0; t < 2; t++) {
+                    for (var t = 0; t < 4; t++) {
                         charArray.splice($scope.currentPos.char, 0, " ");
                     }
                     $scope.$apply(function() {
