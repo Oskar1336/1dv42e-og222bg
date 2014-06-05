@@ -1,7 +1,7 @@
 
 
-angular.module("OnlineEditor.Projects").controller("ProjectCtrl", ["$scope", "$rootScope", "$modal", "ProjectFactory", "AlertService",
-    function($scope, $rootScope, $modal, ProjectFactory, AlertService) {
+angular.module("OnlineEditor.Projects").controller("ProjectCtrl", ["$scope", "$rootScope", "$modal", "$location", "ProjectFactory", "AlertService",
+    function($scope, $rootScope, $modal, $location, ProjectFactory, AlertService) {
 
         $scope.projects = $rootScope.projects;
         $rootScope.$watch("projects", function() {
@@ -17,38 +17,27 @@ angular.module("OnlineEditor.Projects").controller("ProjectCtrl", ["$scope", "$r
             $rootScope.projects = data.localProjects;
             $rootScope.githubProjects = data.githubProjects;
         }).error(function(error) {
-            AlertService.showMessage("Something went wrong when fetching your projects, try to relode page.", "alert-danger", "createAlertBox");
+            AlertService.showMessage("Something went wrong when fetching your projects, try to relode page.", "alert-danger", "projectAlertBox");
         });
 
         $scope.deleteProject = function(project) {
-            AlertService.showPopUp("Delete project", "Are you sure you want to delete " + project.projectName + "?",
-                                   function(ok) {
+            var ending = "?";
+            if (project.saveToGithub) {
+                ending = "?(This does not remove the Github repository)";
+            }
+            AlertService.showPopUp("Delete project", "Are you sure you want to delete " + project.projectName + ending, function(ok) {
                 if (ok) {
                     ProjectFactory.delete(project._id).success(function(data) {
                         $scope.projects.splice($scope.projects.indexOf(project), 1);
                     }).error(function(error) {
-                        console.log(error);
-                    });
-                }
-            });
-        };
-
-        $scope.deleteGHProject = function(project) {
-            console.log(project);
-            AlertService.showPopUp("Delete project", "Are you sure you want to delete " + project.projectName +
-                                   "?(The Github repo will also be removed)", function(ok) {
-                if (ok) {
-                    ProjectFactory.delete(project._id).success(function(data) {
-                        $scope.projects.splice($scope.projects.indexOf(project), 1);
-                    }).error(function(error) {
-                        console.log(error);
+                        AlertService.showMessage("Something went wrong when deleting project, try again.", "alert-danger", "projectAlertBox");
                     });
                 }
             });
         };
 
         $scope.loadGHProject = function(project) {
-            var tempProject = {
+            ProjectFactory.loadGHProject({
                 id: project.id,
                 projectName: project.name,
                 contents_url: project.contents_url,
@@ -57,12 +46,15 @@ angular.module("OnlineEditor.Projects").controller("ProjectCtrl", ["$scope", "$r
                     username: project.owner.login,
                     id: project.owner.id
                 }
-            };
+            }).success(function(data) {
+                if (typeof data.content._id !== "undefined") {
+                    $rootScope.selectedProject = data.content;
+                    $location.path("editor/"+data.content._id);
+                } else {
 
-            ProjectFactory.loadGHProject(tempProject).success(function(data) {
-                console.log(data);
+                }
             }).error(function(error) {
-                console.log(error);
+                AlertService.showMessage("Something went wrong when importing Github repository, try to import again.", "alert-danger", "projectAlertBox");
             });
         };
 

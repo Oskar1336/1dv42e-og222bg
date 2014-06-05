@@ -6,7 +6,7 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
         $rootScope.subfolders = {};
         $rootScope.folderFiles = {};
         $scope.showFolders = {};
-        $scope.openFiles = [];
+        $rootScope.openFiles = [];
         $rootScope.openFile = null;
         $rootScope.openedFiles = {};
 
@@ -41,14 +41,14 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
             return $sce.trustAsHtml(html);
         };
 
-        $scope.loadFile = function(file) {
+        $rootScope.loadFile = function(file) {
             if (typeof $rootScope.openedFiles[file._id] === "undefined") {
                 $rootScope.openedFiles[file._id] = file;
             }
             file = $rootScope.openedFiles[file._id];
             
-            if ($scope.openFiles.indexOf(file) === -1) {
-                $scope.openFiles.push(file);
+            if ($rootScope.openFiles.indexOf(file) === -1) {
+                $rootScope.openFiles.push(file);
             }
 
             if ($rootScope.openFile === null || $rootScope.openFile._id !== file._id) {
@@ -74,11 +74,11 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
         };
 
         $scope.closeFile = function(file) {
-            var fileIndex = $scope.openFiles.indexOf(file);
-            $scope.openFiles.splice(fileIndex, 1);
+            var fileIndex = $rootScope.openFiles.indexOf(file);
+            $rootScope.openFiles.splice(fileIndex, 1);
             if (file._id === $rootScope.openFile._id) {
                 if (fileIndex !== 0) {
-                    $scope.loadFile($scope.openFiles[fileIndex-1]);
+                    $scope.loadFile($rootScope.openFiles[fileIndex-1]);
                 } else {
                     $rootScope.openFile = {};
                     $rootScope.rows = [{

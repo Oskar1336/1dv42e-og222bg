@@ -39,7 +39,6 @@ a {
 
 .editor-container {
     width: 100%;
-    background-color: #333333;
 }
 
 .edit-wrapper {
@@ -61,7 +60,6 @@ a {
 
 .left-side-bar {
     width: 300px;
-    height: 570px;
     position: fixed;
     top: 30px;
     left: 0;
@@ -86,12 +84,11 @@ a {
 }
 
 .code-wrapper {
-    /*float:left;*/
     color: white;
     font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace;
     position: absolute;
     top: 30px;
-    left: 300px;
+    left:300px;
 }
 
 .open-files {
@@ -114,6 +111,7 @@ a {
     background-color: #d4d4d4;
     margin-right: 2px;
     float:left;
+    cursor: default;
 }
 
     .open-file .selected {
@@ -132,7 +130,6 @@ a {
 
 .code {
     color: white;
-    background-color: #333333;
     border: none;
     margin: 0;
     width: 940px;
@@ -143,13 +140,11 @@ a {
 .code-layer {
     float:left;
     position:absolute;
-    /*z-index: 5000;*/
 }
 
 .marker-layer {
     position:absolute;
     float: left;
-    /*z-index: 10000;*/
     cursor: text;
 }
 
@@ -165,7 +160,6 @@ a {
 }
 
 .row-count {
-    /*margin-top: 5px;*/
     margin-right: 5px;
     margin-left:5px;
     width:23px;
@@ -183,4 +177,13 @@ a {
 
 .margin-bottom {
     margin-bottom: 10px;
+}
+
+.no-select {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }

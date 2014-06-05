@@ -1,11 +1,12 @@
-
+// @TODO: Implement FTP support
+// FTP module
+// https://github.com/sergi/jsftp
 
 module.exports = function(app, models, S) {
     var authHelpers = require("../models/authHelperFunctions");
     var request = require("request");
     var events = require("events");
     var emitter = new events.EventEmitter();
-    var GitHubAPI = require("github-api");
 
     // Route for getting all projects avaiable for current logged user.
     app.get("/projects", authHelpers.checkIfAuthenticated, function(req, res) {
@@ -17,6 +18,10 @@ module.exports = function(app, models, S) {
                 res.send({error: err, statusCode: 500});
             } else {
                 getUserRepos(req.user, function(err, data) {
+                    // for (var i = 0; i < data.length; i++) {
+
+                    // }
+
                     res.status(200);
                     res.send({githubProjects: JSON.parse(data), localProjects: projects, statusCode: 200});
                 });
@@ -42,192 +47,6 @@ module.exports = function(app, models, S) {
             }
         });
     });
-
-    emitter.on("saveProjectContent", function(newProject, rootFolder, items, accessToken) {
-        for (var i = 0; i < items.length; i++) {
-            if (items[i].type === "dir") {
-                console.log("folder");
-                saveFolder(items[i], rootFolder, newProject, accessToken);
-            } else if (items[i].type === "file") {
-                console.log("file");
-                saveFile(items[i], rootFolder, accessToken);
-            }
-        }
-    });
-
-    emitter.on("createGHProject", function(rootFolder, projectName, items, res, user) {
-        var newProject = new models.Project({
-            projectName: projectName,
-            owner: user._id,
-            users: [ user._id ],
-            rootFolder: rootFolder._id,
-            saveToGithub: true
-        });
-        newProject.save(function(err) {
-            if (err) {
-                res.status(500);
-                res.send({error: err, statusCode: 500});
-            } else {
-                models.User.findById(user._id, function(err, currentUser) {
-                    if (err) {
-                        res.status(500);
-                        res.send({error: err, statusCode: 500});
-                    } else {
-                        currentUser.projects.push(newProject._id);
-                        currentUser.save();
-                    }
-                });
-                rootFolder.parent = rootFolder._id;
-                rootFolder.project = newProject._id;
-                rootFolder.save(function(err) {
-                    if (err) {
-                        res.status(500);
-                        res.send({error: err, statusCode: 500});
-                    } else {
-                        emitter.emit("saveProjectContent", newProject, rootFolder, items, user.accessToken);
-                    }
-                });
-            }
-        });
-    });
-
-    app.post("/loadghproject", authHelpers.checkIfAuthenticated, function(req, res) {
-        request({
-            url: "https://api.github.com/repos/"+req.user.username+"/"+req.body.projectName+"/contents",
-            method: "GET",
-            headers: {
-                "User-Agent": "1dv42e-og222bg",
-                "Authorization": "token "+req.user.accessToken
-            }
-        }, function(err, response, body) {
-            var items = JSON.parse(body);
-            models.Project.findOne({projectName: req.body.projectName}).populate("users rootFolder owner").exec(function(err, project) {
-                if (typeof project === "undefined" || project === null) {
-                    var rootFolder = new models.Folder({
-                        folderName: req.body.projectName,
-                        files: [],
-                        folders: []
-                    });
-                    rootFolder.save(function(err) {
-                        if (err) {
-                            res.status(500);
-                            res.send({error: err, statusCode: 500});
-                        } else {
-                            emitter.emit("createGHProject", rootFolder, req.body.projectName, items, res, req.user);
-                        }
-                    });
-                } else {
-                    res.status(200);
-                    res.send({content: project, statusCode: 200});
-                }
-            });
-        });
-    });
-
-    function saveFolder (folder, parentFolder, project, accessToken) {
-        // Save new folder and set parentFolder as parent.
-        var newFolder = new models.Folder({
-            folderName: folder.name,
-            files: [],
-            folders: [],
-            githubUrl: folder.url,
-            parent: parentFolder._id,
-            project: project._id
-        });
-        newFolder.save(function(err) {
-            if (err) {
-                // @TODO: Smth?
-            } else {
-                parentFolder.folders.push(newFolder._id);
-                parentFolder.save(function(err) {
-                    if (err) {
-                        // @TODO: Smth?
-                    } else {
-                        request({
-                            url: folder.url,
-                            method: "GET",
-                            headers: {
-                                "User-Agent": "1dv42e-og222bg",
-                                "Authorization": "token "+accessToken
-                            }
-                        }, function(err, response, body) {
-                            var items = JSON.parse(body);
-                            for (var i = 0; i < items.length; i++) {
-                                console.log(items[i].type);
-                                if (items[i].type === "dir") {
-                                    saveFolder(items[i], newFolder, project, accessToken);
-                                } else if (items[i].type === "file") {
-                                    saveFile(items[i], newFolder, accessToken);
-                                }
-                            }
-                        });
-                    }
-                });
-            }
-        });
-    }
-
-    function saveFile (fileInfo, parentFolder, accessToken) {
-        request({
-            url: fileInfo.url,
-            method: "GET",
-            headers: {
-                "User-Agent": "1dv42e-og222bg",
-                "Authorization": "token "+accessToken
-            }
-        }, function(err, response, body) {
-            var file = JSON.parse(body);
-            var newFile = new models.File({
-                name: getFileName(file.name),
-                type: getFileExtension(file.name),
-                content: getFileContent(file.content, file.encoding),
-                folder: parentFolder._id
-            });
-            newFile.save(function(err) {
-                if (err) {
-                    console.log(err);
-                } else {
-                    models.Folder.findByIdAndUpdate(parentFolder._id, {$push: {files: newFile._id}},
-                                                                      {safe: true, upsert: true}).exec();
-                }
-            });
-        });
-    }
-
-    function getFileContent (content, encoding) {
-        if (typeof content !== "undefined") {
-            var utfArray = new Buffer(content, encoding).toString().split("\n");
-            var contentArray = [];
-            for (var i = 0; i < utfArray.length; i++) {
-                contentArray.push(replaceToCustomXML(utfArray[i]));
-            }
-            return contentArray;
-        } else {
-            return [""];
-        }
-    }
-
-    function replaceToCustomXML (string) {
-        string = string.replace(/\t/g, "<TAB>");
-        string = string.replace(/ /g, "<SPACE>");
-        return string;
-    }
-
-    function getFileName (fileName) {
-        if (typeof fileName !== "undefined") {
-            return fileName.split(".")[0];
-        } else {
-            return "";
-        }
-    }
-
-    function getFileExtension (fileName) {
-        if (typeof fileName !== "undefined") {
-            return fileName.split(".").pop();
-        }  else {
-            return "";
-        }
-    }
 
     // Event that sends project to client side.
     emitter.on("sendProject", function(rootFolder, newProject, res) {
@@ -288,8 +107,7 @@ module.exports = function(app, models, S) {
             }
         }, function(err, res, body) {
             if (err) {
-                console.log("--------------------------Error row 104--------------------------");
-                console.log(err);
+                console.log("Error row 105");
             } else {
                 project.htmlLink = body.html_url;
                 project.githubRepoName = body.name;
@@ -343,11 +161,6 @@ module.exports = function(app, models, S) {
         }
     });
 
-    // Route for commit to github.
-    app.put("/project/:id", authHelpers.checkIfAuthenticated, function(req, res) {
-
-    });
-
     // @TODO: Validate user input.
     // Route for updating project.
     app.put("/projects/:id", authHelpers.checkIfAuthenticated, function(req, res) {
@@ -371,25 +184,6 @@ module.exports = function(app, models, S) {
                         }
                     }
                     // @TODO: Implement multiple users per project
-                    // if (req.body.users) {
-                    //     if (req.user._id === project.owner) {
-                    //         for (var i = 0; i < req.body.users.length; i++) {
-                    //             if (req.body.users[i].remove) {
-                    //                 project.users.splice(project.users.indexOf(req.body.users[i]._id), 1);
-                    //             } else {
-                    //                 project.users.push(req.body.users[i]._id);
-                    //                 models.User.findById(req.body.users[i]._id, function(err, user) {
-                    //                      user.projects.push(project._id);
-                    //                      user.save();
-                    //                 });
-                    //             }
-                    //         }
-                    //         updated = true;
-                    //     } else {
-                    //         res.status(403);
-                    //         res.send({error: "Forbidden User not allowed to add users to project.", statusCode: 403});
-                    //     }
-                    // }
                     if (updated) {
                         project.save(function(err) {
                             if (err) {
@@ -407,6 +201,9 @@ module.exports = function(app, models, S) {
                                 });
                             }
                         });
+                    } else {
+                        res.status(400);
+                        res.send({error: "Project not updated", statusCode: 400});
                     }
                 }
             }
@@ -417,19 +214,6 @@ module.exports = function(app, models, S) {
         // Delete project.
         models.Project.remove({_id: projectId}).exec(function(err) {
             callback(err, err ? 500 : 204);
-        });
-    });
-
-    emitter.on("removeRepoFromGithub", function(user, project, callback) {
-        request({
-            url: "https://api.github.com/repos/"+user.username+"/"+project.githubRepoName,
-            method: "DELETE",
-            headers: {
-                "User-Agent": "1dv42e-og222bg",
-                "Authorization": "token " + user.accessToken
-            }
-        }, function(err, res, body) {
-            emitter.emit("removeProject", project._id, callback);
         });
     });
 
@@ -450,7 +234,7 @@ module.exports = function(app, models, S) {
                     });
                 }
 
-                var removeCallback = function(err, statusCode) {
+                emitter.emit("removeProject", project._id, function(err, statusCode) {
                     if (err) {
                         res.status(statusCode);
                         res.send({error: err, statusCode: statusCode});
@@ -458,13 +242,7 @@ module.exports = function(app, models, S) {
                         res.status(statusCode);
                         res.send({content: "Project deleted", statusCode: statusCode});
                     }
-                };
-
-                if (project.saveToGithub) {
-                    emitter.emit("removeRepoFromGithub", req.user, project, removeCallback);
-                } else {
-                    emitter.emit("removeProject", project._id, removeCallback);
-                }
+                });
             } else {
                 res.status(401);
                 res.send({error: "User not authorized to access requested project.", statusCode: 401});
@@ -504,7 +282,7 @@ module.exports = function(app, models, S) {
 
     function getUserRepos (user, callback) {
         request({
-            url: "https://api.github.com/user/repos",
+            url: "https://api.github.com/user/repos?type=public&sort=updated",
             method: "GET",
             headers: {
                 "User-Agent": "1dv42e-og222bg",
@@ -518,6 +296,4 @@ module.exports = function(app, models, S) {
             }
         });
     }
-
-
 };

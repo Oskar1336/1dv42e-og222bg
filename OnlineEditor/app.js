@@ -32,6 +32,8 @@ require("./routes/project")(app, models, S);
 require("./routes/folder")(app, models);
 // File routes.
 require("./routes/file")(app, models);
+// Github api routes.
+require("./routes/github")(app, models);
 
 require("./routes/empty")(app, models);
 

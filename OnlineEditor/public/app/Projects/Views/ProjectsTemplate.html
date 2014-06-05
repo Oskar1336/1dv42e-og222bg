@@ -4,34 +4,7 @@
 
         <div data-ng-controller="ProjectCtrl">
             <h1>Your projects</h1>
-            <div class="panel panel-default">
-                <div class="panel-heading">Github projects</div>
-                <div class="panel-body">
-                    <div class="row">
-                        <div class="col-xs-6 col-md-3" data-ng-repeat="ghProject in githubProjects">
-                            <div class="thumbnail project-color">
-                                <div class="caption">
-                                    <h4>{{ghProject.name}}</h4>
-                                    <p>Owner: {{ghProject.owner.login}}<br>
-                                        <span data-ng-show="ghProject.private">This is a private project</span>
-                                        <span data-ng-hide="ghProject.private">This is a public project</span>
-                                    </p>
-                                </div>
-                                <a href="javascript:void(0)" class="btn btn-danger" data-ng-click="deleteGHProject(ghProject)">Delete</a>
-                                <a href="javascript:void(0)" class="btn btn-info" data-ng-click="openCreateEditProjectModal(ghProject)">Update</a>
-                                <a href="javascript:void(0)" class="btn btn-primary" data-ng-click="loadGHProject(ghProject)">Open</a>
-                            </div>
-                        </div>
-                        <div class="col-xs-6 col-md-2 center-text create-project">
-                            <a href="javascript:void(0);" data-ng-click="openCreateEditProjectModal(null, true)">
-                                <span class="glyphicon glyphicon-plus"></span>
-                                <p>Create new project</p>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
+            <div id="projectAlertBox" class="alert"></div>
             <div class="panel panel-default">
                 <div class="panel-heading">Local projects</div>
                 <div class="panel-body">
@@ -50,6 +23,32 @@
                         </div>
                         <div class="col-xs-6 col-md-2 center-text create-project">
                             <a href="javascript:void(0);" data-ng-click="openCreateEditProjectModal(null, false)">
+                                <span class="glyphicon glyphicon-plus"></span>
+                                <p>Create new project</p>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel panel-default">
+                <div class="panel-heading">Github projects</div>
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-xs-6 col-md-3" data-ng-repeat="ghProject in githubProjects">
+                            <div class="thumbnail project-color">
+                                <div class="caption">
+                                    <h4>{{ghProject.name}}</h4>
+                                    <p>Owner: {{ghProject.owner.login}}<br>
+                                        <span data-ng-show="ghProject.private">This is a private project</span>
+                                        <span data-ng-hide="ghProject.private">This is a public project</span>
+                                    </p>
+                                </div>
+                                <a href="javascript:void(0)" class="btn btn-primary" data-ng-click="loadGHProject(ghProject)">Import</a>
+                            </div>
+                        </div>
+                        <div class="col-xs-6 col-md-2 center-text create-project">
+                            <a href="javascript:void(0);" data-ng-click="openCreateEditProjectModal(null, true)">
                                 <span class="glyphicon glyphicon-plus"></span>
                                 <p>Create new project</p>
                             </a>

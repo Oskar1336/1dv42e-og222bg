@@ -7,11 +7,31 @@
   },
   "dependencies": {
     "express": "3.5.1",
-    "hjs": "*",
-    "mongoose": ">=3.8.8",
-    "passport": ">=0.2.0",
-    "passport-github": ">=0.1.5",
-    "string": ">=1.8.0",
-    "request": ">=2.33.0"
-  }
+    "hjs": "0.0.6",
+    "mongoose": "3.8.8",
+    "passport": "0.2.0",
+    "passport-github": "0.1.5",
+    "string": "1.8.0",
+    "request": "2.33.0"
+  },
+  "subdomain": "onlineeditor",
+  "engines": {
+    "node": "0.10.26"
+  },
+  "description": "A onlineeditor",
+  "main": "app.js",
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Oskar1336/1dv42e-og222bg"
+  },
+  "keywords": [
+    "onlineeditor"
+  ],
+  "author": "Oskar Georgsson",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Oskar1336/1dv42e-og222bg/issues"
+  },
+  "homepage": "https://github.com/Oskar1336/1dv42e-og222bg"
 }

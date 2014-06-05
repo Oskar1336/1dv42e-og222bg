@@ -13,16 +13,20 @@ angular.module("OnlineEditor.Alert").service("AlertService", ["$modal", function
                         .empty();
                 });
         };
-        this.showPopUp = function(title, message, callback) {
+        this.showPopUp = function(title, content, callback, popuplink) {
+            var popup = "app/Alert/Views/PopupModalTemplate.html";
+            if (popuplink === null) {
+                popup = popuplink;
+            }
             var modalInstance = $modal.open({
-                templateUrl: "app/Alert/Views/PopupModalTemplate.html",
+                templateUrl: popup,
                 controller: PopupInstanceCtrl,
                 resolve: {
                     title: function() {
                         return title;
                     },
-                    message: function() {
-                        return message;
+                    content: function() {
+                        return content;
                     },
                     callback: function() {
                         return callback;
@@ -31,8 +35,8 @@ angular.module("OnlineEditor.Alert").service("AlertService", ["$modal", function
             });
         };
 
-        var PopupInstanceCtrl = function($scope, $modalInstance, title, message, callback) {
-            $scope.message = message;
+        var PopupInstanceCtrl = function($scope, $modalInstance, title, content, callback) {
+            $scope.content = content;
             $scope.title = title;
             $scope.close = function() {
                 $modalInstance.close();

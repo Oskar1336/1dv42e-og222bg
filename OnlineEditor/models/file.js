@@ -6,6 +6,7 @@ module.exports = function(mongoose) {
         name: String,
         type: String,
         content: [String],
-        folder: { type:Schema.Types.ObjectId, ref: "Folder" }
+        folder: { type:Schema.Types.ObjectId, ref: "Folder" },
+        githubPath: String
     }));
 };
