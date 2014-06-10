@@ -12,7 +12,7 @@ module.exports = {
     },
     checkIfUserIsAuthorized: function (currentUser, projectUsers) {
         for (var i = 0; i < projectUsers.length; i++) {
-            if (S(projectUsers[i]).s === S(currentUser._id).s) {
+            if (S(projectUsers[i]).s == S(currentUser._id).s) {
                 return true;
             }
         }

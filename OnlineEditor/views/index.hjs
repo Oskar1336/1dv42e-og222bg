@@ -43,6 +43,6 @@
     <script src="/app/Editor/Controllers/CodeCtrl.js"></script>
     <script src="/app/Editor/Services/FolderFactory.js"></script>
     <script src="/app/Editor/Services/FileFactory.js"></script>
-
+    <script src="/app/Editor/Services/EditorHelpers.js"></script>
   </body>
 </html>

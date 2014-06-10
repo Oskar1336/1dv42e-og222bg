@@ -1,7 +1,7 @@
 
 
-angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$rootScope", "$sce", "$modal", "$location", "FolderFactory", "AlertService", "FileFactory",
-    function($scope, $rootScope, $sce, $modal, $location, FolderFactory, AlertService, FileFactory) {
+angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$rootScope", "$sce", "$modal", "$location", "EditorHelpers", "FolderFactory", "AlertService", "FileFactory",
+    function($scope, $rootScope, $sce, $modal, $location, EditorHelpers, FolderFactory, AlertService, FileFactory) {
         "use strict";
         $rootScope.subfolders = {};
         $rootScope.folderFiles = {};
@@ -67,7 +67,7 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
                         var row = convertCustomXMLToHTMLCodes(file.content[i]);
                         rows.push({
                             text: row,
-                            rowLength: replaceHtmlCodes(row).length
+                            rowLength: EditorHelpers.replaceHtmlCodes(row).length
                         });
                     }
                 }
@@ -110,8 +110,10 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
         };
 
         $scope.removeFile = function(file) {
-            if ($rootScope.openFile._id === file._id) {
-                $rootScope.openFile = {};
+            if ($rootScope.openFile !== null) {
+                if ($rootScope.openFile._id === file._id) {
+                    $rootScope.openFile = {};
+                }
             }
             var parentId = "";
             if (typeof file.folder === "object") {
@@ -147,17 +149,16 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
                 }
             });
             modalInstance.result.then(function() {
-                bindKeydown();
+                EditorHelpers.bindKeydown();
             }, function() {
-                bindKeydown();
+                EditorHelpers.bindKeydown();
             });
         };
 
         var EditFileCtrl = function($scope, $modalInstance, $rootScope, file) {
             $scope.isFolder = false;
             $scope.newFile = {
-                fileName: file.name,
-                fileType: file.type
+                fileName: file.name
             };
             $scope.supportedLangs = [{
                     name: "JavaScript",
@@ -176,6 +177,7 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
 
             $scope.saveFile = function() {
                 if (valid()) {
+                    $scope.newFile.fileType = EditorHelpers.getFileExtension($scope.newFile.fileName);
                     FileFactory.updateFile($scope.newFile, file._id).success(function(data) {
                         var rootIndex = $rootScope.selectedProject.rootFolder.files.indexOf(file);
                         if (rootIndex !== -1) {
@@ -200,10 +202,6 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
                     valid = false;
                     AlertService.showMessage("File name is not valid", "alert-danger", "createAlertBox");
                 }
-                if (!$scope.newFile.fileType) {
-                    valid = false;
-                    AlertService.showMessage("File type is not valid", "alert-danger", "createAlertBox");
-                }
                 return valid;
             };
         };
@@ -220,9 +218,9 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
                 }
             });
             modalInstance.result.then(function() {
-                bindKeydown();
+                EditorHelpers.bindKeydown();
             }, function() {
-                bindKeydown();
+                EditorHelpers.bindKeydown();
             });
         };
 
@@ -246,6 +244,8 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
 
             $scope.saveFile = function() {
                 if (valid()) {
+                    $scope.newFile.fileType = EditorHelpers.getFileExtension($scope.newFile.fileName);
+                    $scope.newFile.fileName = EditorHelpers.getFileName($scope.newFile.fileName);
                     FileFactory.createFile($scope.newFile, folder._id).success(function(data) {
                         if (data.folder === $rootScope.selectedProject.rootFolder._id) {
                             $rootScope.selectedProject.rootFolder.files.push(data);
@@ -272,10 +272,6 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
                     valid = false;
                     AlertService.showMessage("File name is not valid", "alert-danger", "createAlertBox");
                 }
-                if (!$scope.newFile.fileType) {
-                    valid = false;
-                    AlertService.showMessage("File type is not valid", "alert-danger", "createAlertBox");
-                }
                 return valid;
             };
         };
@@ -292,9 +288,9 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
                 }
             });
             modalInstance.result.then(function() {
-                bindKeydown();
+                EditorHelpers.bindKeydown();
             }, function() {
-                bindKeydown();
+                EditorHelpers.bindKeydown();
             });
         };
 
@@ -351,9 +347,9 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
                 }
             });
             modalInstance.result.then(function() {
-                bindKeydown();
+                EditorHelpers.bindKeydown();
             }, function() {
-                bindKeydown();
+                EditorHelpers.bindKeydown();
             });
         };
 
@@ -390,25 +386,11 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
         };
 
         // Private functions
-        // Replaces HTML specialcodes to real chars.
-        var replaceHtmlCodes = function(string) {
-            string = string.replace(/&nbsp;/g, " ");
-            string = string.replace(/&lt;/g, "<");
-            string = string.replace(/&gt;/g, ">");
-            return string;
-        };
-        // Replaces real chars to HTML specialcodes.
-        var convertToHtmlCodes = function(string) {
-            string = string.replace(/ /g, "&nbsp;");
-            string = string.replace(/</g, "&lt;");
-            string = string.replace(/>/g, "&gt;");
-            return string;
-        };
         // Converts HTML codes to custom XML
         var convertCustomXMLToHTMLCodes = function(string) {
             string = string.replace(/<TAB>/g, "&nbsp;&nbsp;&nbsp;&nbsp;");
             string = string.replace(/<SPACE>/g, "&nbsp;");
-            return convertToHtmlCodes(string);
+            return EditorHelpers.convertToHtmlCodes(string);
         };
 
         var fileExists = function(fileId, folderId) {
