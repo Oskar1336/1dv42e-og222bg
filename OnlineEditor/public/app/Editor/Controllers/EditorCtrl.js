@@ -37,10 +37,12 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
             }
         };
 
+        // Converts HTML code to trusted HTML code(Required by angular to bind HTML).
         $scope.toTrustHtml = function(html) {
             return $sce.trustAsHtml(html);
         };
 
+        // Opens a files content and shows it to the user for editing.
         $rootScope.loadFile = function(file) {
             if (typeof $rootScope.openedFiles[file._id] === "undefined") {
                 $rootScope.openedFiles[file._id] = file;
@@ -90,8 +92,9 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
         };
 
         $scope.removeFolder = function(folder) {
-            if (confirm("Are you sure you want to delete " + folder.folderName + "?")) {
-                FolderFactory.deleteFolder(folder._id).success(function(data) {
+            AlertService.showPopUp("Delete folder", "Are you sure you want to delete " + folder.folderName + "?", function(ok) {
+                if (ok) {
+                    FolderFactory.deleteFolder(folder._id).success(function(data) {
                     var rootIndex = $scope.project.rootFolder.folders.indexOf(folder);
                     if (rootIndex !== -1) {
                         $scope.project.rootFolder.folders.splice(rootIndex, 1);
@@ -99,10 +102,11 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
                         $rootScope.subfolders[folder.parent]
                             .splice($rootScope.subfolders[folder.parent].indexOf(folder), 1);
                     }
-                }).error(function(error) {
-                    console.log(error);
-                });
-            }
+                    }).error(function(error) {
+                        console.log(error);
+                    });
+                }
+            });
         };
 
         $scope.removeFile = function(file) {
@@ -115,20 +119,20 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
             } else {
                 parentId = file.folder;
             }
-
-            if (confirm("Are you sure you want to delete " + file.name + "?")) {
-                FileFactory.deleteFile(file._id).success(function(data) {
+            AlertService.showPopUp("Delete file", "Are you sure you want to delete " + file.name + "?", function(ok) {
+                if (ok) {
+                    FileFactory.deleteFile(file._id).success(function(data) {
                     var rootIndex = $scope.project.rootFolder.files.indexOf(file);
                     if (rootIndex !== -1) {
                         $scope.project.rootFolder.files.splice(rootIndex, 1);
                     } else {
-                        $rootScope.folderFiles[parentId]
-                            .splice($rootScope.folderFiles[parentId].indexOf(file), 1);
+                        $rootScope.folderFiles[parentId].splice($rootScope.folderFiles[parentId].indexOf(file), 1);
                     }
-                }).error(function(error) {
-                    console.log(error);
-                });
-            }
+                    }).error(function(error) {
+                        console.log(error);
+                    });
+                }
+            });
         };
 
         $scope.initEditFile = function(file) {
@@ -386,20 +390,21 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
         };
 
         // Private functions
+        // Replaces HTML specialcodes to real chars.
         var replaceHtmlCodes = function(string) {
             string = string.replace(/&nbsp;/g, " ");
             string = string.replace(/&lt;/g, "<");
             string = string.replace(/&gt;/g, ">");
             return string;
         };
-
+        // Replaces real chars to HTML specialcodes.
         var convertToHtmlCodes = function(string) {
             string = string.replace(/ /g, "&nbsp;");
             string = string.replace(/</g, "&lt;");
             string = string.replace(/>/g, "&gt;");
             return string;
         };
-
+        // Converts HTML codes to custom XML
         var convertCustomXMLToHTMLCodes = function(string) {
             string = string.replace(/<TAB>/g, "&nbsp;&nbsp;&nbsp;&nbsp;");
             string = string.replace(/<SPACE>/g, "&nbsp;");
@@ -423,7 +428,7 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
             }
             return false;
         };
-
+        // Loads a folders subfolders and adds them to the parents object.
         var loadSubFolders = function(folder) {
             if (typeof $rootScope.subfolders[folder._id] === "undefined") {
                 $rootScope.subfolders[folder._id] = [];
@@ -444,7 +449,7 @@ angular.module("OnlineEditor.Editor").controller("EditorCtrl", ["$scope", "$root
                 }
             }
         };
-
+        // Loads a folders files and adds them to the parents object.
         var loadFiles = function(folder) {
             if (typeof $rootScope.folderFiles[folder._id] === "undefined") {
                 $rootScope.folderFiles[folder._id] = [];

@@ -2,21 +2,19 @@
 
 angular.module("OnlineEditor.Projects").controller("ProjectCtrl", ["$scope", "$rootScope", "$modal", "$location", "ProjectFactory", "AlertService",
     function($scope, $rootScope, $modal, $location, ProjectFactory, AlertService) {
-
-        $scope.projects = $rootScope.projects;
-        $rootScope.$watch("projects", function() {
-            $scope.projects = $rootScope.projects;
-        });
-        $rootScope.$watch("githubProjects", function() {
-            $scope.githubProjects = $rootScope.githubProjects;
-        });
+        $scope.showLoader = false;
         $scope.newProject = {};
+        // Shows loader if there is no projects.
+        if (typeof $rootScope.projects === "undefined" || typeof $rootScope.githubProjects === "undefined") {
+            $scope.showLoader = true;
+        }
 
         ProjectFactory.get().success(function(data) {
-            console.log(data);
+            $scope.showLoader = false;
             $rootScope.projects = data.localProjects;
             $rootScope.githubProjects = data.githubProjects;
         }).error(function(error) {
+            $scope.showLoader = false;
             AlertService.showMessage("Something went wrong when fetching your projects, try to relode page.", "alert-danger", "projectAlertBox");
         });
 
@@ -28,7 +26,7 @@ angular.module("OnlineEditor.Projects").controller("ProjectCtrl", ["$scope", "$r
             AlertService.showPopUp("Delete project", "Are you sure you want to delete " + project.projectName + ending, function(ok) {
                 if (ok) {
                     ProjectFactory.delete(project._id).success(function(data) {
-                        $scope.projects.splice($scope.projects.indexOf(project), 1);
+                        $rootScope.projects.splice($rootScope.projects.indexOf(project), 1);
                     }).error(function(error) {
                         AlertService.showMessage("Something went wrong when deleting project, try again.", "alert-danger", "projectAlertBox");
                     });

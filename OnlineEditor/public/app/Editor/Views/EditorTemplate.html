@@ -1,14 +1,15 @@
 <div class="editor-container full-window no-select" data-ng-controller="EditorCtrl">
     <div class="edit-wrapper">
         <div class="top-menu">
-            <div class="dropdown editor-menu-item">
+            <a href="#/projects" class="pull-left">Return to projects</a>
+            <!-- <div class="dropdown editor-menu-item">
                 <a id="fileDDL" data-toggle="dropdown" href="javascript:void(0);">File</a>
                 <ul class="dropdown-menu" role="menu" aria-labelledby="fileDDL">
                     <li role="presentation"><a role="menuitem" tabindex="-1" href="javascript:void(0);" data-ng-click="initCommitProject"><span class="glyphicon glyphicon-refresh"></span> Commit to GitHub</a></li>
                     <li role="presentation"><a role="menuitem" tabindex="-1" href="javascript:void(0);" data-ng-click="saveAll()"><span class="glyphicon glyphicon-floppy-disk"></span> Save all</a></li>
                 </ul>
             </div>
-            <a href="javascript:void(0);" class="editor-menu-item" data-ng-click="options()">Options</a>
+            <a href="javascript:void(0);" class="editor-menu-item" data-ng-click="options()">Options</a> -->
         </div>
         <div class="open-files">
             <div data-ng-repeat="file in openFiles" class="open-file" data-ng-click="loadFile(file)">

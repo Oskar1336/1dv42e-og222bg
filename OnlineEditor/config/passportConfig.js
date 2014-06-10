@@ -9,11 +9,11 @@ module.exports = function(models) {
     var oauthCreds = require("../models/oauthCreds");
 
     var findOrCreateUser = function(profile, accesstoken, callback) {
-        models.User.find({ username: profile.username }, function(findErr, users) {
+        models.User.findOne({ username: profile.username }, function(findErr, user) {
             if (findErr) {
                 callback(findErr, null);
             } else {
-                if (users.length === 0) {
+                if (user === null) {
                     models.User.create({
                         username: profile.username,
                         githubId: profile.id,
@@ -27,20 +27,20 @@ module.exports = function(models) {
                             callback(null, newUser);
                         }
                     });
-                } else if (users.length === 1) {
-                    users[0].accessToken = accesstoken;
-                    users[0].email = profile._json.email;
-                    users[0].name = profile.displayName;
-                    users[0].username = profile.username;
-                    users[0].save(function(saveErr) {
+                } else if (user) {
+                    user.accessToken = accesstoken;
+                    user.email = profile._json.email;
+                    user.name = profile.displayName;
+                    user.username = profile.username;
+                    user.save(function(saveErr) {
                         if (saveErr) {
                             callback(saveErr, null);
                         } else {
-                            callback(null, users[0]);
+                            callback(null, user);
                         }
                     });
                 } else {
-                    console.log("Major user error!! Row 33");
+                    callback("Error", null);
                 }
             }
         });
@@ -58,8 +58,7 @@ module.exports = function(models) {
             clientID: oauthCreds.GITHUB_CLIENT_ID,
             clientSecret: oauthCreds.GITHUB_CLIENT_SECRET,
             callbackURL: oauthCreds.GITHUB_CALLBACKURL
-        },
-        function(accessToken, refreshToken, profile, done) {
+        }, function(accessToken, refreshToken, profile, done) {
             process.nextTick(function() {
                 findOrCreateUser(profile, accessToken, function(err, data) {
                     if (err) {

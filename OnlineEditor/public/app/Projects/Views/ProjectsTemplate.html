@@ -9,6 +9,9 @@
                 <div class="panel-heading">Local projects</div>
                 <div class="panel-body">
                     <div class="row">
+                        <div class="col-cs-6 col-md-1" data-ng-show="showLoader">
+                            <img src="/images/loader.gif" alt="Loading...">
+                        </div>
                         <div class="col-xs-6 col-md-3" data-ng-repeat="project in projects">
                             <div class="thumbnail project-color">
                                 <div class="caption">
@@ -21,7 +24,7 @@
                                 <a href="#/editor/{{project._id}}" class="btn btn-primary" data-ng-click="loadProject(project)">Open</a>
                             </div>
                         </div>
-                        <div class="col-xs-6 col-md-2 center-text create-project">
+                        <div class="col-xs-6 col-md-2 center-text create-project" data-ng-hide="showLoader">
                             <a href="javascript:void(0);" data-ng-click="openCreateEditProjectModal(null, false)">
                                 <span class="glyphicon glyphicon-plus"></span>
                                 <p>Create new project</p>
@@ -35,6 +38,9 @@
                 <div class="panel-heading">Github projects</div>
                 <div class="panel-body">
                     <div class="row">
+                        <div class="col-cs-6 col-md-1" data-ng-show="showLoader">
+                            <img src="/images/loader.gif" alt="Loading...">
+                        </div>
                         <div class="col-xs-6 col-md-3" data-ng-repeat="ghProject in githubProjects">
                             <div class="thumbnail project-color">
                                 <div class="caption">
@@ -47,7 +53,7 @@
                                 <a href="javascript:void(0)" class="btn btn-primary" data-ng-click="loadGHProject(ghProject)">Import</a>
                             </div>
                         </div>
-                        <div class="col-xs-6 col-md-2 center-text create-project">
+                        <div class="col-xs-6 col-md-2 center-text create-project" data-ng-hide="showLoader">
                             <a href="javascript:void(0);" data-ng-click="openCreateEditProjectModal(null, true)">
                                 <span class="glyphicon glyphicon-plus"></span>
                                 <p>Create new project</p>
